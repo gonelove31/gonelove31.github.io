@@ -1121,23 +1121,51 @@ function playJumpscareSound(){
   toneOsc.stop(now + 0.45);
 }
 
-/* ---- Sound toggle button ---- */
+/* ---- Sound toggle button (manual override) ---- */
 const soundToggle = document.getElementById("soundToggle");
-soundToggle.addEventListener("click", () => {
+function setSoundUIPlaying(){
+  soundToggle.classList.add("playing");
+  soundToggle.querySelector(".sound-icon").textContent = "🔊";
+  soundToggle.querySelector(".sound-label").textContent = "Tắt âm thanh";
+}
+function setSoundUIStopped(){
+  soundToggle.classList.remove("playing");
+  soundToggle.querySelector(".sound-icon").textContent = "🔇";
+  soundToggle.querySelector(".sound-label").textContent = "Bật âm thanh";
+}
+function turnSoundOn(){
+  ensureAudioCtx();
+  if(soundEnabled) return;
+  soundEnabled = true;
+  startRain();
+  setSoundUIPlaying();
+}
+soundToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
   ensureAudioCtx();
   soundEnabled = !soundEnabled;
   if(soundEnabled){
     startRain();
-    soundToggle.classList.add("playing");
-    soundToggle.querySelector(".sound-icon").textContent = "🔊";
-    soundToggle.querySelector(".sound-label").textContent = "Tắt âm thanh";
+    setSoundUIPlaying();
   } else {
     stopRain();
-    soundToggle.classList.remove("playing");
-    soundToggle.querySelector(".sound-icon").textContent = "🔇";
-    soundToggle.querySelector(".sound-label").textContent = "Bật âm thanh";
+    setSoundUIStopped();
   }
 });
+
+/* ---- Auto-enable sound on the very first interaction anywhere on the page ---- */
+/* Browsers block audio from autoplaying without user interaction, so this catches
+   the first click/tap/keypress on the page (not just the button) and turns sound
+   on automatically right away. */
+function autoEnableSoundOnce(){
+  turnSoundOn();
+  document.removeEventListener("click", autoEnableSoundOnce);
+  document.removeEventListener("keydown", autoEnableSoundOnce);
+  document.removeEventListener("touchstart", autoEnableSoundOnce);
+}
+document.addEventListener("click", autoEnableSoundOnce, {once:true});
+document.addEventListener("keydown", autoEnableSoundOnce, {once:true});
+document.addEventListener("touchstart", autoEnableSoundOnce, {once:true});
 
 /* ====================== STICKY NAV ON SCROLL ====================== */
 const mainNav = document.querySelector("nav");
