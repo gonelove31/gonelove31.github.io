@@ -10,8 +10,10 @@
 :root{
   --void:#0a0a0c;
   --void-2:#111113;
+  --void-3:#08080a;
   --blood:#5c1a1a;
   --blood-bright:#8a2424;
+  --blood-deep:#3a0d0d;
   --ash:#3a3a3e;
   --bone:#e8e4d9;
   --bone-dim:#a8a496;
@@ -30,6 +32,35 @@ body{
   overflow-x:hidden;
   position:relative;
   cursor:default;
+}
+
+/* ====== RAIN CANVAS ====== */
+#rainCanvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;
+  z-index:3;
+  opacity:0.9;
+}
+
+/* ====== WET GLASS BLUR LAYER (subtle window-rain feel) ====== */
+.wet-glass{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:4;
+  background:
+    repeating-linear-gradient(100deg, rgba(180,195,220,0.025) 0px, transparent 2px, transparent 60px),
+    repeating-linear-gradient(78deg, rgba(180,195,220,0.02) 0px, transparent 1px, transparent 90px);
+  mix-blend-mode:screen;
+  opacity:0.6;
+}
+
+/* ====== LIGHTNING FLASH ====== */
+.lightning-flash{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;
+  z-index:9990;
+  background:#dfe6ff;
+  opacity:0;
+  mix-blend-mode:screen;
 }
 
 /* ====== FILM GRAIN + VIGNETTE OVERLAY ====== */
@@ -53,7 +84,7 @@ body{
 .vignette{
   position:fixed;top:0;left:0;width:100%;height:100%;
   pointer-events:none;z-index:9998;
-  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.78) 100%);
 }
 
 .scanlines{
@@ -68,7 +99,6 @@ body{
   opacity:0.4;
 }
 
-/* ====== FLICKER LIGHT EFFECT ====== */
 .flicker-layer{
   position:fixed;top:0;left:0;width:100%;height:100%;
   pointer-events:none;z-index:9996;
@@ -93,20 +123,22 @@ nav{
   text-shadow:0 0 12px rgba(92,26,26,0.6);
 }
 .logo span{color:var(--blood-bright);}
-.nav-links{display:flex;gap:36px;}
+.nav-links{display:flex;gap:30px;}
 .nav-links a{
   color:var(--bone-dim);
   text-decoration:none;
-  font-size:0.78rem;
-  letter-spacing:0.12em;
+  font-size:0.74rem;
+  letter-spacing:0.1em;
   text-transform:uppercase;
   transition:color 0.3s, text-shadow 0.3s;
   position:relative;
+  white-space:nowrap;
 }
 .nav-links a:hover{
   color:var(--blood-bright);
   text-shadow:0 0 8px var(--blood-bright);
 }
+@media(max-width:980px){.nav-links{display:none;}}
 
 /* ====== HERO ====== */
 .hero{
@@ -121,6 +153,21 @@ nav{
   background:
     radial-gradient(ellipse at 50% 30%, rgba(92,26,26,0.08), transparent 60%),
     linear-gradient(180deg, var(--void) 0%, #050506 100%);
+  overflow:hidden;
+}
+
+.fog-layer{
+  position:absolute;
+  bottom:0;left:0;width:200%;height:240px;
+  background:linear-gradient(to top, rgba(60,60,66,0.25), transparent);
+  filter:blur(8px);
+  animation:fogDrift 22s linear infinite;
+  pointer-events:none;
+  z-index:1;
+}
+@keyframes fogDrift{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
 }
 
 .case-number{
@@ -130,79 +177,50 @@ nav{
   letter-spacing:0.3em;
   margin-bottom:24px;
   opacity:0.85;
+  position:relative;z-index:2;
 }
 
 .hero h1{
   font-family:'Cinzel', serif;
   font-weight:900;
-  font-size:clamp(2.8rem, 9vw, 7.5rem);
+  font-size:clamp(2.6rem, 9vw, 7.5rem);
   line-height:0.95;
   letter-spacing:0.02em;
   color:var(--bone);
-  position:relative;
+  position:relative;z-index:2;
   text-shadow:
     0 0 30px rgba(92,26,26,0.4),
     0 0 60px rgba(0,0,0,0.8);
 }
 
-.hero h1 .glitch-text{
-  position:relative;
-  display:inline-block;
-}
+.hero h1 .glitch-text{position:relative;display:inline-block;}
 .hero h1 .glitch-text::before,
 .hero h1 .glitch-text::after{
   content:attr(data-text);
   position:absolute;
-  top:0;left:0;
-  width:100%;
+  top:0;left:0;width:100%;
   opacity:0;
 }
-.hero h1 .glitch-text::before{
-  color:var(--blood-bright);
-  z-index:-1;
-}
-.hero h1 .glitch-text::after{
-  color:var(--sick-green);
-  z-index:-2;
-}
-.hero h1 .glitch-text.glitching::before{
-  opacity:0.8;
-  animation:glitchShift1 0.25s steps(2);
-}
-.hero h1 .glitch-text.glitching::after{
-  opacity:0.8;
-  animation:glitchShift2 0.25s steps(2);
-}
-@keyframes glitchShift1{
-  0%{transform:translate(0,0);}
-  50%{transform:translate(-4px,2px);}
-  100%{transform:translate(0,0);}
-}
-@keyframes glitchShift2{
-  0%{transform:translate(0,0);}
-  50%{transform:translate(4px,-2px);}
-  100%{transform:translate(0,0);}
-}
+.hero h1 .glitch-text::before{color:var(--blood-bright);z-index:-1;}
+.hero h1 .glitch-text::after{color:var(--sick-green);z-index:-2;}
+.hero h1 .glitch-text.glitching::before{opacity:0.8;animation:glitchShift1 0.25s steps(2);}
+.hero h1 .glitch-text.glitching::after{opacity:0.8;animation:glitchShift2 0.25s steps(2);}
+@keyframes glitchShift1{0%{transform:translate(0,0);}50%{transform:translate(-4px,2px);}100%{transform:translate(0,0);}}
+@keyframes glitchShift2{0%{transform:translate(0,0);}50%{transform:translate(4px,-2px);}100%{transform:translate(0,0);}}
 
 .hero-sub{
   font-family:'Special Elite', monospace;
   color:var(--bone-dim);
   font-size:1.05rem;
   margin-top:28px;
-  max-width:560px;
+  max-width:580px;
   line-height:1.7;
   letter-spacing:0.02em;
+  position:relative;z-index:2;
 }
-
 .hero-sub .highlight{color:var(--blood-bright);}
 
-.cta-row{
-  margin-top:48px;
-  display:flex;
-  gap:20px;
-  flex-wrap:wrap;
-  justify-content:center;
-}
+.cta-row{margin-top:48px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;position:relative;z-index:2;}
 
 .btn{
   font-family:'Special Elite', monospace;
@@ -219,349 +237,269 @@ nav{
   transition:border-color 0.3s, color 0.3s, letter-spacing 0.3s;
 }
 .btn::before{
-  content:'';
-  position:absolute;
-  top:0;left:-100%;width:100%;height:100%;
-  background:var(--blood);
-  z-index:-1;
-  transition:left 0.4s ease;
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:var(--blood);z-index:-1;transition:left 0.4s ease;
 }
-.btn:hover{
-  border-color:var(--blood-bright);
-  letter-spacing:0.2em;
-}
+.btn:hover{border-color:var(--blood-bright);letter-spacing:0.2em;}
 .btn:hover::before{left:0;}
-.btn.primary{
-  background:var(--blood);
-  border-color:var(--blood-bright);
-}
+.btn.primary{background:var(--blood);border-color:var(--blood-bright);}
 .btn.primary::before{background:var(--blood-bright);}
 
 .scroll-hint{
-  position:absolute;
-  bottom:36px;
-  font-size:0.7rem;
-  letter-spacing:0.2em;
-  color:var(--bone-dim);
-  opacity:0.6;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
+  position:absolute;bottom:36px;font-size:0.7rem;letter-spacing:0.2em;
+  color:var(--bone-dim);opacity:0.6;display:flex;flex-direction:column;
+  align-items:center;gap:8px;z-index:2;
 }
-.scroll-hint .line{
-  width:1px;height:40px;
-  background:linear-gradient(to bottom, var(--bone-dim), transparent);
-  animation:scrollPulse 2s ease-in-out infinite;
-}
-@keyframes scrollPulse{
-  0%,100%{opacity:0.3;}
-  50%{opacity:1;}
-}
+.scroll-hint .line{width:1px;height:40px;background:linear-gradient(to bottom, var(--bone-dim), transparent);animation:scrollPulse 2s ease-in-out infinite;}
+@keyframes scrollPulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
 
 /* ====== SECTION SHARED ====== */
-section{
-  position:relative;
-  padding:140px 48px;
-  max-width:1200px;
-  margin:0 auto;
-}
+section{position:relative;padding:130px 48px;max-width:1200px;margin:0 auto;z-index:2;}
 .section-label{
-  font-family:'Special Elite', monospace;
-  color:var(--blood-bright);
-  font-size:0.8rem;
-  letter-spacing:0.3em;
-  text-transform:uppercase;
-  margin-bottom:18px;
-  display:flex;
-  align-items:center;
-  gap:14px;
+  font-family:'Special Elite', monospace;color:var(--blood-bright);
+  font-size:0.8rem;letter-spacing:0.3em;text-transform:uppercase;
+  margin-bottom:18px;display:flex;align-items:center;gap:14px;
 }
-.section-label::before{
-  content:'';
-  width:30px;height:1px;
-  background:var(--blood-bright);
-}
+.section-label::before{content:'';width:30px;height:1px;background:var(--blood-bright);}
 .section-title{
-  font-family:'Cinzel', serif;
-  font-weight:600;
-  font-size:clamp(2rem, 4vw, 3.2rem);
-  color:var(--bone);
-  margin-bottom:24px;
-  line-height:1.15;
+  font-family:'Cinzel', serif;font-weight:600;
+  font-size:clamp(2rem, 4vw, 3.2rem);color:var(--bone);
+  margin-bottom:24px;line-height:1.15;
 }
-.section-desc{
-  color:var(--bone-dim);
-  font-size:1rem;
-  line-height:1.8;
-  max-width:680px;
-  margin-bottom:60px;
-}
+.section-desc{color:var(--bone-dim);font-size:1rem;line-height:1.8;max-width:680px;margin-bottom:60px;}
 
 /* ====== GENERATOR TOOL ====== */
 .tool-panel{
   background:linear-gradient(160deg, rgba(20,20,23,0.9), rgba(10,10,12,0.95));
-  border:1px solid var(--ash);
-  border-radius:2px;
-  padding:48px;
-  position:relative;
+  border:1px solid var(--ash);border-radius:2px;padding:48px;position:relative;
   box-shadow:0 0 80px rgba(92,26,26,0.06), inset 0 0 60px rgba(0,0,0,0.5);
 }
 .tool-panel::before{
-  content:'HỒ SƠ MẬT — KHÔNG SAO CHỤP';
-  position:absolute;
-  top:18px;right:24px;
-  font-family:'Special Elite', monospace;
-  font-size:0.6rem;
-  letter-spacing:0.15em;
-  color:var(--ash);
+  content:'HỒ SƠ MẬT — KHÔNG SAO CHỤP';position:absolute;top:18px;right:24px;
+  font-family:'Special Elite', monospace;font-size:0.6rem;letter-spacing:0.15em;color:var(--ash);
 }
-
-.form-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:28px;
-  margin-bottom:28px;
-}
-@media(max-width:680px){.form-row{grid-template-columns:1fr;}}
-
-.field label{
-  display:block;
-  font-family:'Special Elite', monospace;
-  font-size:0.75rem;
-  letter-spacing:0.15em;
-  text-transform:uppercase;
-  color:var(--bone-dim);
-  margin-bottom:10px;
-}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:28px;}
+@media(max-width:680px){.form-row{grid-template-columns:1fr;}.tool-panel{padding:28px;}}
+.field label{display:block;font-family:'Special Elite', monospace;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--bone-dim);margin-bottom:10px;}
 .field select, .field input{
-  width:100%;
-  background:rgba(0,0,0,0.4);
-  border:1px solid var(--ash);
-  color:var(--bone);
-  padding:14px 16px;
-  font-family:'Courier Prime', monospace;
-  font-size:0.95rem;
-  outline:none;
+  width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--ash);color:var(--bone);
+  padding:14px 16px;font-family:'Courier Prime', monospace;font-size:0.95rem;outline:none;
   transition:border-color 0.3s, box-shadow 0.3s;
 }
-.field select:focus, .field input:focus{
-  border-color:var(--blood-bright);
-  box-shadow:0 0 16px rgba(92,26,26,0.3);
-}
+.field select:focus, .field input:focus{border-color:var(--blood-bright);box-shadow:0 0 16px rgba(92,26,26,0.3);}
 .field select{cursor:pointer;}
-
 .generate-btn{
-  width:100%;
-  margin-top:12px;
-  padding:20px;
-  background:var(--blood);
-  border:1px solid var(--blood-bright);
-  color:var(--bone);
-  font-family:'Cinzel', serif;
-  font-weight:600;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  font-size:0.95rem;
-  cursor:pointer;
-  transition:background 0.3s, box-shadow 0.3s, transform 0.15s;
-  position:relative;
+  width:100%;margin-top:12px;padding:20px;background:var(--blood);border:1px solid var(--blood-bright);
+  color:var(--bone);font-family:'Cinzel', serif;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;
+  font-size:0.95rem;cursor:pointer;transition:background 0.3s, box-shadow 0.3s, transform 0.15s;position:relative;
 }
-.generate-btn:hover{
-  background:var(--blood-bright);
-  box-shadow:0 0 40px rgba(138,36,36,0.5);
-}
+.generate-btn:hover{background:var(--blood-bright);box-shadow:0 0 40px rgba(138,36,36,0.5);}
 .generate-btn:active{transform:scale(0.99);}
 
 .result-box{
-  margin-top:36px;
-  padding:32px;
-  border-left:2px solid var(--blood-bright);
-  background:rgba(0,0,0,0.35);
-  font-family:'Special Elite', monospace;
-  line-height:1.9;
-  color:var(--bone);
-  min-height:80px;
-  white-space:pre-wrap;
-  display:none;
-  position:relative;
+  margin-top:36px;padding:32px;border-left:2px solid var(--blood-bright);
+  background:rgba(0,0,0,0.35);font-family:'Special Elite', monospace;line-height:1.9;
+  color:var(--bone);min-height:80px;white-space:pre-wrap;display:none;position:relative;
 }
 .result-box.visible{display:block;animation:fadeFlicker 0.6s steps(6);}
-@keyframes fadeFlicker{
-  0%{opacity:0;}
-  20%{opacity:0.6;}
-  35%{opacity:0.1;}
-  50%{opacity:0.8;}
-  100%{opacity:1;}
-}
-.result-box .typed-cursor{
-  display:inline-block;
-  width:9px;height:1.1em;
-  background:var(--blood-bright);
-  vertical-align:middle;
-  animation:cursorBlink 0.9s steps(2) infinite;
-}
+@keyframes fadeFlicker{0%{opacity:0;}20%{opacity:0.6;}35%{opacity:0.1;}50%{opacity:0.8;}100%{opacity:1;}}
+.result-box .typed-cursor{display:inline-block;width:9px;height:1.1em;background:var(--blood-bright);vertical-align:middle;animation:cursorBlink 0.9s steps(2) infinite;}
 @keyframes cursorBlink{50%{opacity:0;}}
 
-/* ====== GALLERY / CARDS ====== */
-.card-grid{
-  display:grid;
-  grid-template-columns:repeat(3, 1fr);
-  gap:2px;
+.save-row{display:flex;justify-content:flex-end;margin-top:14px;}
+.save-btn{
+  font-family:'Special Elite',monospace;font-size:0.72rem;letter-spacing:0.1em;
+  color:var(--bone-dim);background:transparent;border:1px solid var(--static);
+  padding:8px 16px;cursor:pointer;transition:color 0.3s, border-color 0.3s;
+  display:none;
 }
-@media(max-width:900px){.card-grid{grid-template-columns:1fr;}}
+.save-btn.visible{display:inline-block;}
+.save-btn:hover{color:var(--blood-bright);border-color:var(--blood-bright);}
 
+/* ====== CARDS ====== */
+.card-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:2px;}
+@media(max-width:900px){.card-grid{grid-template-columns:1fr;}}
 .spook-card{
-  background:var(--void-2);
-  border:1px solid var(--static);
-  padding:36px 28px;
-  position:relative;
-  overflow:hidden;
-  cursor:pointer;
-  transition:border-color 0.4s;
+  background:var(--void-2);border:1px solid var(--static);padding:36px 28px;
+  position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.4s;
 }
 .spook-card:hover{border-color:var(--blood-bright);}
 .spook-card .noise-burst{
   position:absolute;top:0;left:0;width:100%;height:100%;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity:0;
-  mix-blend-mode:overlay;
-  transition:opacity 0.1s;
-  pointer-events:none;
+  opacity:0;mix-blend-mode:overlay;transition:opacity 0.1s;pointer-events:none;
 }
-.spook-card:hover .noise-burst{
-  animation:burstFlicker 0.4s steps(4);
+.spook-card:hover .noise-burst{animation:burstFlicker 0.4s steps(4);}
+@keyframes burstFlicker{0%,100%{opacity:0;}25%{opacity:0.5;}50%{opacity:0.1;}75%{opacity:0.4;}}
+.card-icon{font-size:2rem;margin-bottom:20px;filter:drop-shadow(0 0 10px rgba(92,26,26,0.5));}
+.spook-card h3{font-family:'Cinzel', serif;font-size:1.25rem;margin-bottom:12px;color:var(--bone);}
+.spook-card p{color:var(--bone-dim);font-size:0.9rem;line-height:1.7;}
+
+/* ====== PROCESS STEPS ====== */
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--static);}
+@media(max-width:900px){.process-grid{grid-template-columns:1fr;}}
+.process-step{
+  background:var(--void-2);padding:40px 30px;position:relative;
 }
-@keyframes burstFlicker{
-  0%,100%{opacity:0;}
-  25%{opacity:0.5;}
-  50%{opacity:0.1;}
-  75%{opacity:0.4;}
+.process-num{
+  font-family:'Cinzel',serif;font-size:2.6rem;font-weight:900;
+  color:var(--blood-deep);-webkit-text-stroke:1px var(--blood-bright);
+  color:transparent;margin-bottom:18px;display:block;
 }
-.card-icon{
-  font-size:2rem;
-  margin-bottom:20px;
-  filter:drop-shadow(0 0 10px rgba(92,26,26,0.5));
+.process-step h3{font-family:'Cinzel',serif;font-size:1.1rem;margin-bottom:12px;color:var(--bone);}
+.process-step p{color:var(--bone-dim);font-size:0.88rem;line-height:1.7;}
+
+/* ====== GHOST GALLERY ====== */
+.ghost-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:900px){.ghost-gallery{grid-template-columns:repeat(2,1fr);}}
+.ghost-tile{
+  background:var(--void-2);border:1px solid var(--static);aspect-ratio:3/4;
+  position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.3s, transform 0.3s;
 }
-.spook-card h3{
-  font-family:'Cinzel', serif;
-  font-size:1.25rem;
-  margin-bottom:12px;
-  color:var(--bone);
-}
-.spook-card p{
-  color:var(--bone-dim);
-  font-size:0.9rem;
-  line-height:1.7;
+.ghost-tile:hover{border-color:var(--blood-bright);transform:translateY(-4px);}
+.ghost-tile svg{width:100%;height:100%;display:block;}
+.ghost-tile .tile-label{
+  position:absolute;bottom:0;left:0;width:100%;padding:10px 12px;
+  background:linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+  font-family:'Special Elite',monospace;font-size:0.68rem;letter-spacing:0.08em;color:var(--bone-dim);
 }
 
-/* ====== ARCHIVE / EYE SIGNATURE SECTION ====== */
-.archive-section{
-  text-align:center;
-  padding:160px 48px;
-  position:relative;
+/* ====== STORY EXCERPT ====== */
+.story-block{
+  background:var(--void-2);border:1px solid var(--static);padding:50px;
+  position:relative;font-family:'Special Elite',monospace;line-height:2;color:var(--bone-dim);
 }
-.eye-container{
-  width:160px;height:160px;
-  margin:0 auto 48px;
-  position:relative;
+@media(max-width:680px){.story-block{padding:28px;}}
+.story-block .story-title{font-family:'Cinzel',serif;color:var(--bone);font-size:1.4rem;margin-bottom:24px;}
+.story-block .drop-cap::first-letter{
+  font-family:'Cinzel',serif;font-size:3.2rem;float:left;line-height:1;
+  padding-right:10px;color:var(--blood-bright);
 }
-.eye-svg{
-  width:100%;height:100%;
-  filter:drop-shadow(0 0 30px rgba(92,26,26,0.5));
+
+/* ====== TIPS LIST ====== */
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+@media(max-width:780px){.tips-grid{grid-template-columns:1fr;}}
+.tip-item{display:flex;gap:20px;margin-bottom:32px;}
+.tip-mark{
+  font-family:'Cinzel',serif;color:var(--blood-bright);font-size:1.4rem;flex-shrink:0;
+  width:36px;height:36px;border:1px solid var(--blood-bright);display:flex;
+  align-items:center;justify-content:center;border-radius:50%;
 }
+.tip-text h4{font-family:'Cinzel',serif;font-size:1rem;color:var(--bone);margin-bottom:8px;}
+.tip-text p{color:var(--bone-dim);font-size:0.88rem;line-height:1.7;}
+
+/* ====== FAQ ====== */
+.faq-item{border-bottom:1px solid var(--static);}
+.faq-q{
+  padding:26px 0;display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;font-family:'Cinzel',serif;color:var(--bone);font-size:1.05rem;
+}
+.faq-q .plus{color:var(--blood-bright);font-size:1.3rem;transition:transform 0.3s;}
+.faq-item.open .faq-q .plus{transform:rotate(45deg);}
+.faq-a{
+  max-height:0;overflow:hidden;transition:max-height 0.4s ease, padding 0.4s ease;
+  color:var(--bone-dim);font-size:0.9rem;line-height:1.8;
+}
+.faq-item.open .faq-a{max-height:300px;padding-bottom:26px;}
+
+/* ====== ARCHIVE / EYE SIGNATURE ====== */
+.archive-section{text-align:center;padding:160px 48px;position:relative;}
+.eye-container{width:160px;height:160px;margin:0 auto 48px;position:relative;}
+.eye-svg{width:100%;height:100%;filter:drop-shadow(0 0 30px rgba(92,26,26,0.5));}
 .eye-iris{transform-origin:100px 100px;}
 .eye-pupil{transition:transform 0.15s ease-out;}
 
+.saved-ideas{
+  max-width:680px;margin:48px auto 0;text-align:left;
+}
+.saved-item{
+  background:var(--void-2);border-left:2px solid var(--blood-bright);
+  padding:18px 22px;margin-bottom:12px;font-family:'Special Elite',monospace;
+  font-size:0.85rem;color:var(--bone-dim);line-height:1.7;
+}
+.saved-empty{color:var(--ash);font-style:italic;text-align:center;}
+
 /* ====== TICKER ====== */
-.ticker-wrap{
-  border-top:1px solid var(--static);
-  border-bottom:1px solid var(--static);
-  overflow:hidden;
-  padding:18px 0;
-  background:var(--void-2);
-}
-.ticker{
-  display:flex;
-  white-space:nowrap;
-  animation:tickerScroll 40s linear infinite;
-}
-.ticker span{
-  font-family:'Special Elite', monospace;
-  font-size:0.85rem;
-  letter-spacing:0.1em;
-  color:var(--bone-dim);
-  padding:0 32px;
-  border-right:1px solid var(--static);
-}
-@keyframes tickerScroll{
-  0%{transform:translateX(0);}
-  100%{transform:translateX(-50%);}
-}
+.ticker-wrap{border-top:1px solid var(--static);border-bottom:1px solid var(--static);overflow:hidden;padding:18px 0;background:var(--void-2);}
+.ticker{display:flex;white-space:nowrap;animation:tickerScroll 40s linear infinite;}
+.ticker span{font-family:'Special Elite', monospace;font-size:0.85rem;letter-spacing:0.1em;color:var(--bone-dim);padding:0 32px;border-right:1px solid var(--static);}
+@keyframes tickerScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 
 /* ====== FOOTER ====== */
-footer{
-  padding:80px 48px 60px;
-  text-align:center;
-  border-top:1px solid var(--static);
-  position:relative;
-}
-footer .foot-mark{
-  font-family:'Cinzel', serif;
-  color:var(--blood-bright);
-  letter-spacing:0.2em;
-  margin-bottom:16px;
-  font-size:1rem;
-}
-footer p{
-  color:var(--bone-dim);
-  font-size:0.78rem;
-  letter-spacing:0.08em;
-}
+footer{padding:80px 48px 60px;text-align:center;border-top:1px solid var(--static);position:relative;z-index:2;}
+footer .foot-mark{font-family:'Cinzel', serif;color:var(--blood-bright);letter-spacing:0.2em;margin-bottom:16px;font-size:1rem;}
+footer p{color:var(--bone-dim);font-size:0.78rem;letter-spacing:0.08em;}
+footer .foot-warn{margin-top:18px;color:var(--ash);font-size:0.7rem;}
 
-/* ====== JUMPSCARE OVERLAY (subtle, controlled) ====== */
-.jump-flash{
+/* ====== JUMPSCARE GHOST OVERLAY ====== */
+.jump-overlay{
   position:fixed;top:0;left:0;width:100%;height:100%;
-  background:var(--void);
-  z-index:99999;
-  pointer-events:none;
-  opacity:0;
+  z-index:99999;pointer-events:none;opacity:0;
   display:flex;align-items:center;justify-content:center;
+  background:#000;
 }
-.jump-flash.active{
-  animation:jumpFlash 0.5s steps(3);
-}
-@keyframes jumpFlash{
+.jump-overlay.active{animation:jumpBg 0.85s steps(7);}
+@keyframes jumpBg{
   0%{opacity:0;}
-  15%{opacity:1;background:#1a0505;}
-  30%{opacity:0.2;}
-  45%{opacity:0.9;background:#000;}
+  8%{opacity:1;}
+  78%{opacity:1;}
   100%{opacity:0;}
 }
-.jump-flash .glyph{
-  font-size:8rem;
-  color:var(--blood-bright);
+.jump-overlay .ghost-figure{
+  max-width:90vw;
+  max-height:85vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
   opacity:0;
-  font-family:'Cinzel',serif;
+  filter:drop-shadow(0 0 60px rgba(138,36,36,0.65)) contrast(1.15) brightness(0.95);
+  image-rendering:auto;
 }
-.jump-flash.active .glyph{
-  animation:glyphPulse 0.5s steps(3);
+.jump-overlay.active .ghost-figure{
+  animation:ghostPulse 0.85s steps(7);
 }
-@keyframes glyphPulse{
-  0%,100%{opacity:0;transform:scale(1);}
-  30%{opacity:0.85;transform:scale(1.15);}
+@keyframes ghostPulse{
+  0%{opacity:0;transform:scale(0.9) translate(8px,12px);}
+  10%{opacity:1;transform:scale(1.08) translate(-3px,0);}
+  22%{opacity:0.25;transform:scale(1.02) translate(4px,-2px);}
+  34%{opacity:1;transform:scale(1.1) translate(-2px,3px);}
+  48%{opacity:0.95;transform:scale(1.03) translate(2px,0);}
+  65%{opacity:1;transform:scale(1.06) translate(-3px,-2px);}
+  85%{opacity:0.85;transform:scale(1) translate(0,0);}
+  100%{opacity:0;}
 }
 
-/* ====== CUSTOM CURSOR (subtle blood drip follow) ====== */
+/* ====== STATIC NOISE FLASH (no image, screen distortion) ====== */
+.static-flash{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:99998;pointer-events:none;opacity:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.static-flash.active{animation:staticBurst 0.55s steps(6);}
+.static-flash.active.long{animation:staticBurstLong 0.86s steps(9);}
+@keyframes staticBurst{
+  0%,100%{opacity:0;}
+  20%{opacity:0.9;}
+  40%{opacity:0.2;}
+  60%{opacity:0.8;}
+  80%{opacity:0.1;}
+}
+@keyframes staticBurstLong{
+  0%,100%{opacity:0;}
+  12%{opacity:0.85;}
+  25%{opacity:0.15;}
+  38%{opacity:0.75;}
+  50%{opacity:0.1;}
+  62%{opacity:0.7;}
+  75%{opacity:0.15;}
+  88%{opacity:0.5;}
+}
+
 .cursor-glow{
-  position:fixed;
-  width:300px;height:300px;
-  border-radius:50%;
+  position:fixed;width:300px;height:300px;border-radius:50%;
   background:radial-gradient(circle, rgba(92,26,26,0.10), transparent 70%);
-  pointer-events:none;
-  z-index:1;
-  transform:translate(-50%,-50%);
-  transition:opacity 0.3s;
+  pointer-events:none;z-index:1;transform:translate(-50%,-50%);transition:opacity 0.3s;
 }
 
 @media(prefers-reduced-motion: reduce){
@@ -569,32 +507,51 @@ footer p{
 }
 
 ::selection{background:var(--blood);color:var(--bone);}
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--blood-bright);outline-offset:2px;}
 
-a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
-  outline:2px solid var(--blood-bright);
-  outline-offset:2px;
+.warn-banner{
+  position:fixed;bottom:20px;right:20px;z-index:600;
+  background:rgba(10,10,12,0.92);border:1px solid var(--static);
+  padding:12px 18px;font-family:'Special Elite',monospace;font-size:0.7rem;
+  color:var(--bone-dim);letter-spacing:0.05em;max-width:240px;line-height:1.6;
+  cursor:pointer;transition:opacity 0.4s;
 }
+.warn-banner span{color:var(--blood-bright);}
+.warn-banner.hidden{opacity:0;pointer-events:none;}
 </style>
 </head>
 <body>
 
+<canvas id="rainCanvas"></canvas>
+<div class="wet-glass"></div>
+<div class="lightning-flash" id="lightningFlash"></div>
 <div class="grain-overlay"></div>
 <div class="vignette"></div>
 <div class="scanlines"></div>
 <div class="flicker-layer" id="flickerLayer"></div>
 <div class="cursor-glow" id="cursorGlow"></div>
-<div class="jump-flash" id="jumpFlash"><div class="glyph">👁</div></div>
+
+<div class="jump-overlay" id="jumpOverlay">
+  <img class="ghost-figure" id="jumpscareImg" src="" alt="">
+</div>
+<div class="static-flash" id="staticFlash"></div>
 
 <nav>
   <div class="logo">HỒ SƠ <span>13</span></div>
   <div class="nav-links">
     <a href="#generator">Máy Tạo Ý Tưởng</a>
-    <a href="#archive">Thư Viện</a>
-    <a href="#about">Về Xưởng</a>
+    <a href="#process">Quy Trình</a>
+    <a href="#gallery">Bóng Ma</a>
+    <a href="#story">Trích Truyện</a>
+    <a href="#tips">Bí Kíp</a>
+    <a href="#faq">Hỏi Đáp</a>
+    <a href="#archive">Lưu Trữ</a>
   </div>
 </nav>
 
+<!-- ============ HERO ============ -->
 <section class="hero">
+  <div class="fog-layer"></div>
   <div class="case-number">TÀI LIỆU SỐ 0013 · ĐỘ MẬT: TỐI CAO</div>
   <h1>
     <span class="glitch-text" data-text="XƯỞNG">XƯỞNG</span><br>
@@ -604,15 +561,13 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     Nơi những ý tưởng phim và ảnh kinh dị được khai quật từ bóng tối.
     Nhập vài chi tiết, để <span class="highlight">cỗ máy</span> dựng nên
     kịch bản, bối cảnh và hình ảnh ám ảnh tiếp theo của bạn.
+    Cẩn thận — đôi khi cỗ máy phản hồi nhanh hơn bình thường.
   </p>
   <div class="cta-row">
     <button class="btn primary" onclick="document.getElementById('generator').scrollIntoView({behavior:'smooth'})">Bắt đầu tạo</button>
-    <button class="btn" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'})">Xem thư viện</button>
+    <button class="btn" onclick="document.getElementById('gallery').scrollIntoView({behavior:'smooth'})">Xem Bóng Ma</button>
   </div>
-  <div class="scroll-hint">
-    <span>CUỘN XUỐNG</span>
-    <div class="line"></div>
-  </div>
+  <div class="scroll-hint"><span>CUỘN XUỐNG</span><div class="line"></div></div>
 </section>
 
 <div class="ticker-wrap">
@@ -623,22 +578,27 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     <span>ÂM THANH DƯỚI SÀN NHÀ</span>
     <span>BÓNG NGƯỜI KHÔNG CÓ CHỦ</span>
     <span>CUỘC GỌI NHỠ TỪ SỐ ĐÃ MẤT</span>
+    <span>SẤM CHỚP BÁO HIỆU ĐIỀU GÌ ĐÓ</span>
+    <span>ĐỪNG QUAY ĐẦU LẠI</span>
     <span>TIẾNG GÕ CỬA LÚC 3 GIỜ SÁNG</span>
     <span>NGÔI NHÀ KHÔNG CÓ GƯƠNG</span>
     <span>NGƯỜI LẠ TRONG ẢNH CŨ</span>
     <span>ÂM THANH DƯỚI SÀN NHÀ</span>
     <span>BÓNG NGƯỜI KHÔNG CÓ CHỦ</span>
     <span>CUỘC GỌI NHỠ TỪ SỐ ĐÃ MẤT</span>
+    <span>SẤM CHỚP BÁO HIỆU ĐIỀU GÌ ĐÓ</span>
+    <span>ĐỪNG QUAY ĐẦU LẠI</span>
   </div>
 </div>
 
+<!-- ============ GENERATOR ============ -->
 <section id="generator">
   <div class="section-label">CÔNG CỤ 01</div>
   <h2 class="section-title">Máy Tạo Ý Tưởng Kinh Dị</h2>
   <p class="section-desc">
     Chọn thể loại, bối cảnh và "con quái vật" của câu chuyện.
     Cỗ máy sẽ ghép chúng lại thành một hạt giống ý tưởng — dùng để viết kịch bản,
-    dựng ảnh, hoặc lên storyboard.
+    dựng ảnh, hoặc lên storyboard. Mỗi lần khai quật, một thứ gì đó có thể xuất hiện.
   </p>
 
   <div class="tool-panel">
@@ -690,9 +650,11 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     </div>
     <button class="generate-btn" id="generateBtn">▣ Khai Quật Ý Tưởng</button>
     <div class="result-box" id="resultBox"></div>
+    <div class="save-row"><button class="save-btn" id="saveBtn">+ Lưu vào kho lưu trữ</button></div>
   </div>
 </section>
 
+<!-- ============ CARDS ============ -->
 <section id="cards">
   <div class="section-label">CÔNG CỤ 02</div>
   <h2 class="section-title">Bộ Dụng Cụ Sáng Tạo</h2>
@@ -719,6 +681,137 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   </div>
 </section>
 
+<!-- ============ PROCESS ============ -->
+<section id="process">
+  <div class="section-label">QUY TRÌNH</div>
+  <h2 class="section-title">Bốn Bước Dựng Một Câu Chuyện Ma</h2>
+  <p class="section-desc">Một khung sườn đơn giản các nhà làm phim kinh dị độc lập thường dùng — từ ý tưởng thô đến cảnh quay hoàn chỉnh.</p>
+  <div class="process-grid">
+    <div class="process-step">
+      <span class="process-num">01</span>
+      <h3>Chọn Nỗi Sợ Gốc</h3>
+      <p>Xác định nỗi sợ cụ thể (mất kiểm soát, cô đơn, bị theo dõi) trước khi nghĩ đến con ma. Con ma chỉ là hình hài của nỗi sợ đó.</p>
+    </div>
+    <div class="process-step">
+      <span class="process-num">02</span>
+      <h3>Dựng Luật Của Thế Giới</h3>
+      <p>Thực thể của bạn hoạt động theo quy luật nào? Nó xuất hiện khi nào, bị giới hạn bởi điều gì? Luật rõ ràng khiến nỗi sợ logic hơn.</p>
+    </div>
+    <div class="process-step">
+      <span class="process-num">03</span>
+      <h3>Giữ Nhịp Im Lặng</h3>
+      <p>Phim ma hay không dựa vào tiếng động lớn, mà vào khoảng lặng kéo dài trước đó. Hãy để khán giả tự hỏi "có gì đó không ổn" trước khi xác nhận.</p>
+    </div>
+    <div class="process-step">
+      <span class="process-num">04</span>
+      <h3>Kết Thúc Mở Câu Hỏi</h3>
+      <p>Đừng giải thích hết. Một kết thúc còn đọng lại câu hỏi sẽ ám ảnh người xem lâu hơn một kết thúc đóng kín hoàn toàn.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GHOST GALLERY ============ -->
+<section id="gallery">
+  <div class="section-label">THƯ VIỆN HÌNH ẢNH</div>
+  <h2 class="section-title">Bộ Sưu Tập Bóng Ma</h2>
+  <p class="section-desc">Những silhouette tham khảo cho dựng cảnh, ánh sáng và bố cục — chạm vào để xem gợi ý dùng mỗi hình.</p>
+  <div class="ghost-gallery" id="ghostGallery"></div>
+</section>
+
+<!-- ============ STORY EXCERPT ============ -->
+<section id="story">
+  <div class="section-label">TRÍCH ĐOẠN</div>
+  <h2 class="section-title">Một Mẩu Truyện Ngắn Mẫu</h2>
+  <p class="section-desc">Ví dụ về cách dựng văng bản ngắn gợi không khí — dùng làm mở đầu kịch bản hoặc caption cho ảnh.</p>
+  <div class="story-block">
+    <div class="story-title">— Trích "Căn Phòng Không Có Cửa" —</div>
+    <p class="drop-cap">
+      Tôi đếm lại các bước chân từ cửa vào đến giường, như mọi đêm. Mười hai bước.
+      Đêm nay là mười ba. Tôi đứng yên giữa phòng, cố nhớ lại mình đã đi qua cánh cửa nào,
+      bởi khi quay đầu lại, bức tường phía sau chỉ là một bề mặt phẳng — không có khung,
+      không có bản lề, không có gì cho thấy từng có một cánh cửa ở đó.
+      Đèn bàn vẫn sáng. Tủ quần áo vẫn mở hé như tôi để lúc nãy.
+      Chỉ là giờ tôi không còn nhớ "lúc nãy" là khi nào.
+    </p>
+  </div>
+</section>
+
+<!-- ============ TIPS ============ -->
+<section id="tips">
+  <div class="section-label">BÍ KÍP DỰNG CẢNH</div>
+  <h2 class="section-title">Kỹ Thuật Gây Ám Ảnh Bằng Hình Ảnh</h2>
+  <p class="section-desc">Một số nguyên tắc quay/dựng ảnh kinh dị phổ biến để bạn áp dụng khi sản xuất thật.</p>
+  <div class="tips-grid">
+    <div class="tip-item">
+      <div class="tip-mark">1</div>
+      <div class="tip-text">
+        <h4>Để trống không gian âm</h4>
+        <p>Một góc tối trong khung hình mà khán giả không chắc có gì ở đó tạo hiệu ứng bất an mạnh hơn việc cho thấy rõ con ma.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-mark">2</div>
+      <div class="tip-text">
+        <h4>Ánh sáng một nguồn</h4>
+        <p>Chỉ dùng một nguồn sáng yếu (nến, đèn pin, đèn đường) khiến bóng tối xung quanh trở nên đáng sợ hơn vì không thể đoán trước.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-mark">3</div>
+      <div class="tip-text">
+        <h4>Đối xứng bị phá vỡ</h4>
+        <p>Một khung hình gần như đối xứng hoàn hảo nhưng lệch nhẹ ở một điểm sẽ khiến mắt người xem khó chịu một cách vô thức.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-mark">4</div>
+      <div class="tip-text">
+        <h4>Chuyển động ở rìa khung</h4>
+        <p>Đặt một chi tiết di chuyển rất nhẹ ở góc khung hình, ngoài tâm điểm chú ý — khán giả cảm nhận trước khi nhận ra.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-mark">5</div>
+      <div class="tip-text">
+        <h4>Giữ máy quay tĩnh lâu</h4>
+        <p>Một cú máy tĩnh kéo dài bất thường khiến khán giả tự hỏi "máy quay đang đợi gì" — sự chờ đợi đó chính là nỗi sợ.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-mark">6</div>
+      <div class="tip-text">
+        <h4>Màu lạnh, một điểm nhấn ấm</h4>
+        <p>Tổng thể tông xanh/xám lạnh với một điểm sáng ấm nhỏ (nến, đèn) dẫn mắt người xem và tạo cảm giác cô lập.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+  <div class="section-label">HỎI ĐÁP</div>
+  <h2 class="section-title">Những Câu Hỏi Thường Gặp</h2>
+  <div class="faq-list" id="faqList">
+    <div class="faq-item">
+      <div class="faq-q"><span>Ý tưởng tạo ra có thể dùng để làm phim/ảnh thương mại không?</span><span class="plus">+</span></div>
+      <div class="faq-a">Có. Ý tưởng do công cụ ghép ra chỉ là hạt giống gợi ý — bạn hoàn toàn có thể phát triển, viết lại và sử dụng tự do cho dự án của riêng mình.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Hiệu ứng giật hình có thể tắt được không?</span><span class="plus">+</span></div>
+      <div class="faq-a">Được. Nếu trình duyệt/hệ điều hành của bạn bật chế độ "giảm hiệu ứng chuyển động" (reduced motion), trang sẽ tự động tắt phần lớn animation và hiệu ứng giật mạnh.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Kho lưu trữ ý tưởng có được lưu lại sau khi tắt trang không?</span><span class="plus">+</span></div>
+      <div class="faq-a">Trong bản demo này, danh sách ý tưởng đã lưu chỉ tồn tại trong phiên làm việc hiện tại trên trình duyệt và sẽ mất khi tải lại trang.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span>Tôi có thể tự thêm thể loại, bối cảnh riêng không?</span><span class="plus">+</span></div>
+      <div class="faq-a">Có, vì đây là mã nguồn mở dạng HTML/JS đơn giản — bạn có thể chỉnh sửa trực tiếp danh sách lựa chọn trong code để thêm bối cảnh, thực thể của riêng mình.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHIVE / EYE ============ -->
 <section id="archive" class="archive-section">
   <div class="eye-container" id="eyeContainer">
     <svg class="eye-svg" viewBox="0 0 200 200">
@@ -736,20 +829,131 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     </svg>
   </div>
   <div class="section-label" style="justify-content:center;">THƯ VIỆN BÓNG TỐI</div>
-  <h2 class="section-title">Mỗi Ý Tưởng Đều Đang Theo Dõi Bạn</h2>
+  <h2 class="section-title">Những Ý Tưởng Bạn Đã Khai Quật</h2>
   <p class="section-desc" style="margin:0 auto;">
-    Lưu lại những hạt giống ý tưởng bạn thích nhất ở công cụ phía trên.
+    Mỗi ý tưởng bạn lưu ở công cụ phía trên sẽ xuất hiện tại đây.
     Con mắt sẽ luôn dõi theo con trỏ của bạn — như một lời nhắc rằng
     câu chuyện hay nhất luôn đang quan sát người kể nó.
   </p>
+  <div class="saved-ideas" id="savedIdeas">
+    <p class="saved-empty">— chưa có ý tưởng nào được lưu —</p>
+  </div>
 </section>
 
 <footer>
   <div class="foot-mark">✦ HỒ SƠ 13 ✦</div>
   <p>XƯỞNG KỊCH BẢN MA — CÔNG CỤ SÁNG TẠO NỘI DUNG KINH DỊ. DÙNG CHO MỤC ĐÍCH SÁNG TÁC NGHỆ THUẬT.</p>
+  <p class="foot-warn">Hiệu ứng hình ảnh/âm thanh trên trang mang tính minh họa, không nhằm gây hoảng loạn thật.</p>
 </footer>
 
+<div class="warn-banner" id="warnBanner">
+  ⚠ Trang có <span>hiệu ứng chớp sáng &amp; jump-scare nhẹ</span>. Bấm để ẩn cảnh báo này.
+</div>
+
 <script>
+/* ====================== WARNING BANNER ====================== */
+document.getElementById("warnBanner").addEventListener("click", function(){
+  this.classList.add("hidden");
+});
+
+/* ====================== RAIN + LIGHTNING CANVAS ====================== */
+const canvas = document.getElementById("rainCanvas");
+const ctx = canvas.getContext("2d");
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const DROP_COUNT = window.innerWidth < 700 ? 160 : 320;
+let drops = [];
+let splashes = [];
+function makeDrop(){
+  return {
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    len: 16 + Math.random()*30,
+    speed: 11 + Math.random()*11,
+    drift: 1.2 + Math.random()*1.4,
+    opacity: 0.25 + Math.random()*0.4,
+    width: Math.random() < 0.18 ? 2 : 1
+  };
+}
+for(let i=0;i<DROP_COUNT;i++) drops.push(makeDrop());
+
+function drawRain(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // streaks
+  for(const d of drops){
+    ctx.globalAlpha = d.opacity;
+    ctx.strokeStyle = "rgba(195,208,228,0.85)";
+    ctx.lineWidth = d.width;
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x - d.drift*4, d.y + d.len);
+    ctx.stroke();
+    d.y += d.speed;
+    d.x -= d.drift;
+
+    if(d.y > canvas.height){
+      if(Math.random() < 0.5){
+        splashes.push({x:d.x, y:canvas.height - 2, r:1, maxR: 4+Math.random()*4, opacity:0.5});
+      }
+      d.y = -30 - Math.random()*60;
+      d.x = Math.random()*canvas.width + canvas.width*0.05;
+    }
+  }
+
+  // splashes
+  ctx.globalAlpha = 1;
+  for(let i=splashes.length-1;i>=0;i--){
+    const s = splashes[i];
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(195,208,228,${s.opacity})`;
+    ctx.lineWidth = 1;
+    ctx.ellipse(s.x, s.y, s.r, s.r*0.4, 0, 0, Math.PI*2);
+    ctx.stroke();
+    s.r += 0.6;
+    s.opacity -= 0.045;
+    if(s.opacity <= 0 || s.r > s.maxR){
+      splashes.splice(i,1);
+    }
+  }
+
+  requestAnimationFrame(drawRain);
+}
+drawRain();
+
+/* ---- Lightning ---- */
+const lightningFlash = document.getElementById("lightningFlash");
+function scheduleLightning(){
+  const delay = 6000 + Math.random()*14000;
+  setTimeout(() => {
+    strikeLightning();
+    scheduleLightning();
+  }, delay);
+}
+function strikeLightning(){
+  const flickers = 2 + Math.floor(Math.random()*2);
+  let t = 0;
+  for(let i=0;i<flickers;i++){
+    const onTime = t + Math.random()*80;
+    const offTime = onTime + 50 + Math.random()*90;
+    setTimeout(()=>{ lightningFlash.style.opacity = (0.55+Math.random()*0.3).toFixed(2); }, onTime);
+    setTimeout(()=>{ lightningFlash.style.opacity = 0; }, offTime);
+    t = offTime + Math.random()*120;
+  }
+  // subtle screen "thunder shake"
+  setTimeout(()=>{
+    document.body.style.transform = "translate(1px,0px)";
+    setTimeout(()=> document.body.style.transform = "translate(-1px,1px)", 60);
+    setTimeout(()=> document.body.style.transform = "translate(0,0)", 120);
+  }, t*0.3);
+}
+scheduleLightning();
+
 /* ====================== DATA POOLS ====================== */
 const titlePrefixes = ["Tiếng Vọng Của","Lời Nguyền","Ngôi Nhà","Đêm Cuối Của","Bóng Ma","Căn Phòng","Hơi Thở","Vết Sẹo Của","Giấc Mơ Của","Ký Ức Của"];
 const titleSuffixes = ["Kẻ Bị Lãng Quên","Mẹ","Người Câm Lặng","Tầng Hầm","Đứa Trẻ Mất Tích","Người Gác Cổng","Linh Hồn Lạc","Ngôi Làng","Đêm Trăng Tròn","Người Không Mặt"];
@@ -761,6 +965,7 @@ const shotIdeas = [
   "Toàn cảnh một ngôi nhà từ xa giữa cánh đồng sương mù, một ô cửa sổ duy nhất sáng đèn dù nhà được cho là bỏ hoang.",
   "Máy quay tay run rẩy, lia nhanh qua một căn phòng trống, dừng lại đột ngột tại một góc tường có vết tay đỏ.",
   "Cảnh quay qua khe cửa hẹp, một mắt người (hoặc thứ gì đó giống mắt người) nhìn chằm chằm từ phía bên kia.",
+  "Cảnh dưới mưa, ánh chớp sấm rọi sáng một bóng người đứng bất động giữa sân — biến mất khi sấm dứt.",
 ];
 
 const soundIdeas = [
@@ -770,6 +975,7 @@ const soundIdeas = [
   "Tiếng cọt két của sàn gỗ lặp lại đúng 3 nhịp, im lặng tuyệt đối, rồi lặp lại — không bao giờ thêm bước thứ 4.",
   "Một đoạn nhạc hộp (music box) bị tam tấu lỗi, vài nốt bị kéo dài bất thường như băng bị kẹt.",
   "Tiếng thì thầm nhiều giọng chồng lên nhau, không nghe rõ từ nào, âm lượng tăng dần khi nhân vật bước vào phòng.",
+  "Tiếng mưa rơi đều đặn, xen một tiếng sấm xa rất nhỏ — rồi một tiếng gõ cửa ba lần, đúng giữa hai tiếng sấm.",
 ];
 
 const ideaTemplates = (genre, setting, entity, mood) => {
@@ -794,7 +1000,7 @@ const ideaTemplates = (genre, setting, entity, mood) => {
 };
 
 /* ====================== TYPEWRITER EFFECT ====================== */
-function typeWriter(el, text, speed=18){
+function typeWriter(el, text, speed=18, onDone){
   el.innerHTML = "";
   el.classList.add("visible");
   let i = 0;
@@ -808,6 +1014,7 @@ function typeWriter(el, text, speed=18){
       setTimeout(step, speed + Math.random()*20);
     } else {
       el.appendChild(cursor);
+      if(onDone) onDone();
     }
   }
   step();
@@ -816,6 +1023,8 @@ function typeWriter(el, text, speed=18){
 /* ====================== GENERATE BUTTON ====================== */
 const generateBtn = document.getElementById("generateBtn");
 const resultBox = document.getElementById("resultBox");
+const saveBtn = document.getElementById("saveBtn");
+let currentIdea = "";
 
 generateBtn.addEventListener("click", () => {
   const genre = document.getElementById("genre").value;
@@ -823,9 +1032,26 @@ generateBtn.addEventListener("click", () => {
   const entity = document.getElementById("entity").value;
   const mood = document.getElementById("mood").value;
 
-  triggerFlicker();
+  triggerJumpscare();
+  saveBtn.classList.remove("visible");
   const idea = ideaTemplates(genre, setting, entity, mood);
-  setTimeout(() => typeWriter(resultBox, idea, 14), 180);
+  currentIdea = idea;
+  setTimeout(() => typeWriter(resultBox, idea, 14, ()=> saveBtn.classList.add("visible")), 260);
+});
+
+/* ====================== SAVE TO ARCHIVE ====================== */
+const savedIdeas = document.getElementById("savedIdeas");
+let savedCount = 0;
+saveBtn.addEventListener("click", () => {
+  if(!currentIdea) return;
+  if(savedCount === 0) savedIdeas.innerHTML = "";
+  const item = document.createElement("div");
+  item.className = "saved-item";
+  item.textContent = `№${String(savedCount+1).padStart(2,'0')} — ${currentIdea}`;
+  savedIdeas.prepend(item);
+  savedCount++;
+  saveBtn.textContent = "✓ Đã lưu vào kho";
+  setTimeout(()=> saveBtn.textContent = "+ Lưu vào kho lưu trữ", 1400);
 });
 
 /* ====================== CARD INTERACTIONS ====================== */
@@ -843,8 +1069,10 @@ document.querySelectorAll(".spook-card").forEach(card => {
       text = soundIdeas[Math.floor(Math.random()*soundIdeas.length)];
     }
     document.getElementById("generator").scrollIntoView({behavior:"smooth", block:"center"});
-    triggerFlicker();
-    setTimeout(() => typeWriter(resultBox, text, 14), 250);
+    triggerStaticOnly();
+    currentIdea = text;
+    saveBtn.classList.remove("visible");
+    setTimeout(() => typeWriter(resultBox, text, 14, ()=> saveBtn.classList.add("visible")), 300);
   });
 });
 
@@ -870,12 +1098,60 @@ function ambientFlicker(){
 }
 ambientFlicker();
 
-/* ====================== JUMPSCARE (subtle, rare, skippable) ====================== */
-const jumpFlash = document.getElementById("jumpFlash");
-function triggerFlicker(){
-  jumpFlash.classList.add("active");
-  setTimeout(()=> jumpFlash.classList.remove("active"), 500);
+/* ====================== JUMPSCARE GHOST (on click of generate) ====================== */
+const jumpOverlay = document.getElementById("jumpOverlay");
+const jumpscareImg = document.getElementById("jumpscareImg");
+const staticFlash = document.getElementById("staticFlash");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const ghostImages = [
+  "https://i.ibb.co/j9NWgypn/ma-5.jpg",
+  "https://i.ibb.co/G46wVf46/ma1.jpg",
+  "https://i.ibb.co/Mk4M9Fwj/ma-2.jpg",
+  "https://i.ibb.co/jPQxZXxH/ma-3.jpg",
+  "https://i.ibb.co/73PS1Nd/ma-4.jpg"
+];
+// Preload all ghost images so the very first jumpscare isn't blank/late
+ghostImages.forEach(src => { const pre = new Image(); pre.src = src; });
+
+let lastGhostIndex = -1;
+function pickGhostImage(){
+  let idx;
+  do{
+    idx = Math.floor(Math.random()*ghostImages.length);
+  }while(idx === lastGhostIndex && ghostImages.length > 1);
+  lastGhostIndex = idx;
+  return ghostImages[idx];
 }
+
+function triggerJumpscare(){
+  if(reducedMotion){ return; }
+  jumpscareImg.src = pickGhostImage();
+  jumpOverlay.classList.add("active");
+  staticFlash.classList.add("active", "long");
+  setTimeout(()=>{
+    jumpOverlay.classList.remove("active");
+    staticFlash.classList.remove("active", "long");
+  }, 860);
+}
+function triggerStaticOnly(){
+  if(reducedMotion){ return; }
+  staticFlash.classList.add("active");
+  setTimeout(()=> staticFlash.classList.remove("active"), 560);
+}
+
+/* Random jumpscare while scrolling — can repeat, with cooldown so it doesn't spam */
+let scareCooldown = false;
+window.addEventListener("scroll", () => {
+  if(scareCooldown) return;
+  const scrollPercent = (window.scrollY) / (document.body.scrollHeight - window.innerHeight);
+  if(scrollPercent > 0.4 && Math.random() > 0.985){
+    scareCooldown = true;
+    triggerJumpscare();
+    setTimeout(()=> scareCooldown = false, 12000);
+  }
+});
+
 
 /* ====================== EYE FOLLOWS CURSOR ====================== */
 const pupil = document.getElementById("pupil");
@@ -889,6 +1165,7 @@ window.addEventListener("resize", updateEyeCenter);
 window.addEventListener("scroll", updateEyeCenter);
 updateEyeCenter();
 
+const cursorGlow = document.getElementById("cursorGlow");
 window.addEventListener("mousemove", (e) => {
   const dx = e.clientX - eyeCenter.x;
   const dy = e.clientY - eyeCenter.y;
@@ -900,20 +1177,70 @@ window.addEventListener("mousemove", (e) => {
   pupil.setAttribute("cx", 100 + px);
   pupil.setAttribute("cy", 100 + py);
 
-  // cursor glow follow
   cursorGlow.style.left = e.clientX + "px";
   cursorGlow.style.top = e.clientY + "px";
 });
 
-/* ====================== CURSOR GLOW ====================== */
-const cursorGlow = document.getElementById("cursorGlow");
+/* ====================== GHOST GALLERY GENERATION (SVG silhouettes) ====================== */
+const ghostGallery = document.getElementById("ghostGallery");
+const ghostVariants = [
+  {label:"Bóng đứng cuối hành lang", path:"M50 10 C35 10 25 25 25 40 C25 50 30 58 28 66 C20 90 12 120 18 150 C22 165 32 175 40 180 C36 160 44 150 47 162 C50 175 56 182 60 186 C64 182 70 175 73 162 C76 150 84 160 80 180 C88 175 98 165 102 150 C108 120 100 90 92 66 C90 58 95 50 95 40 C95 25 85 10 50 10 Z"},
+  {label:"Bóng cúi đầu trong góc", path:"M55 14 C40 14 30 28 32 42 C33 50 38 56 36 64 C28 86 22 110 26 138 C30 156 40 168 48 174 C58 150 46 130 58 138 C66 144 64 160 56 178 C66 174 78 162 82 144 C86 120 78 92 70 68 C68 58 74 50 74 42 C76 26 68 14 55 14 Z"},
+  {label:"Bóng kéo dài bất thường", path:"M50 6 C38 6 30 18 30 30 C30 38 34 44 32 50 C20 80 10 130 16 170 C20 190 34 205 46 210 C40 180 50 165 52 180 C54 198 60 206 62 208 C66 204 72 196 74 180 C76 165 86 180 80 210 C92 205 106 190 110 170 C116 130 106 80 94 50 C92 44 96 38 96 30 C96 16 86 6 50 6 Z"},
+  {label:"Bóng đôi tay giơ lên", path:"M50 16 C38 16 28 28 28 40 C28 48 32 54 30 60 C10 50 4 30 0 34 C2 50 12 68 26 76 C20 100 16 124 22 148 C26 164 36 174 44 180 C40 158 48 148 50 160 C52 174 58 180 60 182 C64 178 70 172 72 160 C74 148 82 158 78 180 C86 174 96 164 100 148 C106 124 102 100 96 76 C110 68 120 50 122 34 C118 30 112 50 92 60 C90 54 94 48 94 40 C94 26 84 16 70 16 C64 16 58 16 50 16 Z"},
+  {label:"Bóng ngồi co người", path:"M40 60 C30 60 22 68 22 78 C22 86 26 92 24 98 C18 116 16 138 22 156 C26 168 34 176 42 180 C56 184 70 184 84 180 C92 176 98 168 100 156 C104 140 98 122 88 108 C90 96 90 84 84 74 C78 62 64 56 52 58 C48 58 44 58 40 60 Z"},
+  {label:"Bóng quay lưng nhìn ra cửa", path:"M50 8 C36 8 26 20 26 34 C26 42 30 48 28 54 C18 78 12 112 18 148 C22 168 36 182 50 186 C64 182 78 168 82 148 C88 112 82 78 72 54 C70 48 74 42 74 34 C74 20 64 8 50 8 Z"},
+  {label:"Bóng treo lơ lửng", path:"M50 4 L50 24 M50 24 C36 24 26 36 26 50 C26 58 30 64 28 70 C18 96 14 130 20 158 C24 174 36 184 50 188 C64 184 76 174 80 158 C86 130 82 96 72 70 C70 64 74 58 74 50 C74 36 64 24 50 24 Z"},
+  {label:"Bóng nghiêng đầu kỳ lạ", path:"M55 10 C42 14 32 26 34 40 C35 48 40 53 37 60 C26 84 18 116 24 148 C28 166 40 178 50 182 C62 178 74 166 78 148 C84 116 76 84 65 60 C62 53 67 48 68 40 C70 26 60 14 55 10 Z"},
+];
+
+function renderGhostGallery(){
+  ghostGallery.innerHTML = "";
+  ghostVariants.forEach((g, idx) => {
+    const tile = document.createElement("div");
+    tile.className = "ghost-tile";
+    tile.innerHTML = `
+      <svg viewBox="0 0 130 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="gg${idx}" cx="50%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#9a958a"/>
+            <stop offset="55%" stop-color="#4a463e"/>
+            <stop offset="100%" stop-color="#0a0a0c" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="blur${idx}"><feGaussianBlur stdDeviation="1.6"/></filter>
+        </defs>
+        <rect width="130" height="220" fill="#111113"/>
+        <path d="${g.path}" fill="url(#gg${idx})" filter="url(#blur${idx})" opacity="0.88" transform="translate(15,10) scale(1.0)"/>
+      </svg>
+      <div class="tile-label">${g.label}</div>
+    `;
+    tile.addEventListener("click", () => {
+      triggerStaticOnly();
+      document.getElementById("generator").scrollIntoView({behavior:"smooth", block:"center"});
+      currentIdea = `Gợi ý dáng đứng: "${g.label}" — dùng cho cảnh xuất hiện thoáng qua ở rìa khung hình hoặc cuối hành lang tối, ánh sáng yếu từ một nguồn duy nhất phía sau.`;
+      saveBtn.classList.remove("visible");
+      setTimeout(() => typeWriter(resultBox, currentIdea, 12, ()=> saveBtn.classList.add("visible")), 280);
+    });
+    ghostGallery.appendChild(tile);
+  });
+}
+renderGhostGallery();
+
+/* ====================== FAQ ACCORDION ====================== */
+document.querySelectorAll(".faq-item").forEach(item => {
+  item.querySelector(".faq-q").addEventListener("click", () => {
+    const isOpen = item.classList.contains("open");
+    document.querySelectorAll(".faq-item").forEach(i => i.classList.remove("open"));
+    if(!isOpen) item.classList.add("open");
+  });
+});
 
 /* ====================== SCROLL REVEAL ====================== */
-const revealEls = document.querySelectorAll("section, .spook-card");
+const revealEls = document.querySelectorAll("section, .spook-card, .process-step, .ghost-tile, .tip-item");
 revealEls.forEach(el => {
   el.style.opacity = 0;
-  el.style.transform = "translateY(24px)";
-  el.style.transition = "opacity 0.9s ease, transform 0.9s ease";
+  el.style.transform = "translateY(20px)";
+  el.style.transition = "opacity 0.8s ease, transform 0.8s ease";
 });
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -922,21 +1249,8 @@ const observer = new IntersectionObserver((entries) => {
       entry.target.style.transform = "translateY(0)";
     }
   });
-}, {threshold:0.12});
+}, {threshold:0.1});
 revealEls.forEach(el => observer.observe(el));
-
-/* ====================== RANDOM RARE STATIC BURST ON BODY ====================== */
-let lastBurst = Date.now();
-function maybeStaticBurst(){
-  const now = Date.now();
-  if(now - lastBurst > 15000 && Math.random() > 0.985){
-    lastBurst = now;
-    document.body.style.filter = "invert(1) hue-rotate(180deg)";
-    setTimeout(()=> document.body.style.filter = "none", 70);
-  }
-  requestAnimationFrame(maybeStaticBurst);
-}
-requestAnimationFrame(maybeStaticBurst);
 </script>
 </body>
 </html>
