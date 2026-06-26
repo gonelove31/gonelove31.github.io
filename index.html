@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HỒ SƠ 13 — Xưởng Kịch Bản Kinh Dị</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Cinzel:wght@400;600;900&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0a0a0c;
+  --void-2:#111113;
+  --blood:#5c1a1a;
+  --blood-bright:#8a2424;
+  --ash:#3a3a3e;
+  --bone:#e8e4d9;
+  --bone-dim:#a8a496;
+  --sick-green:#1f2e1f;
+  --static:#26262a;
+  --film-grain-op:0.06;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--void);
+  color:var(--bone);
+  font-family:'Courier Prime', monospace;
+  overflow-x:hidden;
+  position:relative;
+  cursor:default;
+}
+
+/* ====== FILM GRAIN + VIGNETTE OVERLAY ====== */
+.grain-overlay{
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  pointer-events:none;
+  z-index:9999;
+  mix-blend-mode:overlay;
+  opacity:var(--film-grain-op);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainShift 0.5s steps(3) infinite;
+}
+@keyframes grainShift{
+  0%{transform:translate(0,0);}
+  33%{transform:translate(-2%,1%);}
+  66%{transform:translate(1%,-2%);}
+  100%{transform:translate(0,0);}
+}
+
+.vignette{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9998;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+}
+
+.scanlines{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9997;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    rgba(0,0,0,0.12) 1px,
+    transparent 2px
+  );
+  opacity:0.4;
+}
+
+/* ====== FLICKER LIGHT EFFECT ====== */
+.flicker-layer{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9996;
+  background:var(--void);
+  opacity:0;
+}
+
+/* ====== NAV ====== */
+nav{
+  position:fixed;top:0;left:0;width:100%;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:24px 48px;
+  z-index:500;
+  background:linear-gradient(to bottom, rgba(10,10,12,0.95), transparent);
+}
+.logo{
+  font-family:'Cinzel',serif;
+  font-weight:900;
+  font-size:1.1rem;
+  letter-spacing:0.15em;
+  color:var(--bone);
+  text-shadow:0 0 12px rgba(92,26,26,0.6);
+}
+.logo span{color:var(--blood-bright);}
+.nav-links{display:flex;gap:36px;}
+.nav-links a{
+  color:var(--bone-dim);
+  text-decoration:none;
+  font-size:0.78rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  transition:color 0.3s, text-shadow 0.3s;
+  position:relative;
+}
+.nav-links a:hover{
+  color:var(--blood-bright);
+  text-shadow:0 0 8px var(--blood-bright);
+}
+
+/* ====== HERO ====== */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  position:relative;
+  padding:0 24px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(92,26,26,0.08), transparent 60%),
+    linear-gradient(180deg, var(--void) 0%, #050506 100%);
+}
+
+.case-number{
+  font-family:'Special Elite', monospace;
+  color:var(--blood-bright);
+  font-size:0.85rem;
+  letter-spacing:0.3em;
+  margin-bottom:24px;
+  opacity:0.85;
+}
+
+.hero h1{
+  font-family:'Cinzel', serif;
+  font-weight:900;
+  font-size:clamp(2.8rem, 9vw, 7.5rem);
+  line-height:0.95;
+  letter-spacing:0.02em;
+  color:var(--bone);
+  position:relative;
+  text-shadow:
+    0 0 30px rgba(92,26,26,0.4),
+    0 0 60px rgba(0,0,0,0.8);
+}
+
+.hero h1 .glitch-text{
+  position:relative;
+  display:inline-block;
+}
+.hero h1 .glitch-text::before,
+.hero h1 .glitch-text::after{
+  content:attr(data-text);
+  position:absolute;
+  top:0;left:0;
+  width:100%;
+  opacity:0;
+}
+.hero h1 .glitch-text::before{
+  color:var(--blood-bright);
+  z-index:-1;
+}
+.hero h1 .glitch-text::after{
+  color:var(--sick-green);
+  z-index:-2;
+}
+.hero h1 .glitch-text.glitching::before{
+  opacity:0.8;
+  animation:glitchShift1 0.25s steps(2);
+}
+.hero h1 .glitch-text.glitching::after{
+  opacity:0.8;
+  animation:glitchShift2 0.25s steps(2);
+}
+@keyframes glitchShift1{
+  0%{transform:translate(0,0);}
+  50%{transform:translate(-4px,2px);}
+  100%{transform:translate(0,0);}
+}
+@keyframes glitchShift2{
+  0%{transform:translate(0,0);}
+  50%{transform:translate(4px,-2px);}
+  100%{transform:translate(0,0);}
+}
+
+.hero-sub{
+  font-family:'Special Elite', monospace;
+  color:var(--bone-dim);
+  font-size:1.05rem;
+  margin-top:28px;
+  max-width:560px;
+  line-height:1.7;
+  letter-spacing:0.02em;
+}
+
+.hero-sub .highlight{color:var(--blood-bright);}
+
+.cta-row{
+  margin-top:48px;
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.btn{
+  font-family:'Special Elite', monospace;
+  padding:16px 34px;
+  border:1px solid var(--ash);
+  background:transparent;
+  color:var(--bone);
+  font-size:0.85rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:border-color 0.3s, color 0.3s, letter-spacing 0.3s;
+}
+.btn::before{
+  content:'';
+  position:absolute;
+  top:0;left:-100%;width:100%;height:100%;
+  background:var(--blood);
+  z-index:-1;
+  transition:left 0.4s ease;
+}
+.btn:hover{
+  border-color:var(--blood-bright);
+  letter-spacing:0.2em;
+}
+.btn:hover::before{left:0;}
+.btn.primary{
+  background:var(--blood);
+  border-color:var(--blood-bright);
+}
+.btn.primary::before{background:var(--blood-bright);}
+
+.scroll-hint{
+  position:absolute;
+  bottom:36px;
+  font-size:0.7rem;
+  letter-spacing:0.2em;
+  color:var(--bone-dim);
+  opacity:0.6;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+.scroll-hint .line{
+  width:1px;height:40px;
+  background:linear-gradient(to bottom, var(--bone-dim), transparent);
+  animation:scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse{
+  0%,100%{opacity:0.3;}
+  50%{opacity:1;}
+}
+
+/* ====== SECTION SHARED ====== */
+section{
+  position:relative;
+  padding:140px 48px;
+  max-width:1200px;
+  margin:0 auto;
+}
+.section-label{
+  font-family:'Special Elite', monospace;
+  color:var(--blood-bright);
+  font-size:0.8rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.section-label::before{
+  content:'';
+  width:30px;height:1px;
+  background:var(--blood-bright);
+}
+.section-title{
+  font-family:'Cinzel', serif;
+  font-weight:600;
+  font-size:clamp(2rem, 4vw, 3.2rem);
+  color:var(--bone);
+  margin-bottom:24px;
+  line-height:1.15;
+}
+.section-desc{
+  color:var(--bone-dim);
+  font-size:1rem;
+  line-height:1.8;
+  max-width:680px;
+  margin-bottom:60px;
+}
+
+/* ====== GENERATOR TOOL ====== */
+.tool-panel{
+  background:linear-gradient(160deg, rgba(20,20,23,0.9), rgba(10,10,12,0.95));
+  border:1px solid var(--ash);
+  border-radius:2px;
+  padding:48px;
+  position:relative;
+  box-shadow:0 0 80px rgba(92,26,26,0.06), inset 0 0 60px rgba(0,0,0,0.5);
+}
+.tool-panel::before{
+  content:'HỒ SƠ MẬT — KHÔNG SAO CHỤP';
+  position:absolute;
+  top:18px;right:24px;
+  font-family:'Special Elite', monospace;
+  font-size:0.6rem;
+  letter-spacing:0.15em;
+  color:var(--ash);
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:28px;
+  margin-bottom:28px;
+}
+@media(max-width:680px){.form-row{grid-template-columns:1fr;}}
+
+.field label{
+  display:block;
+  font-family:'Special Elite', monospace;
+  font-size:0.75rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--bone-dim);
+  margin-bottom:10px;
+}
+.field select, .field input{
+  width:100%;
+  background:rgba(0,0,0,0.4);
+  border:1px solid var(--ash);
+  color:var(--bone);
+  padding:14px 16px;
+  font-family:'Courier Prime', monospace;
+  font-size:0.95rem;
+  outline:none;
+  transition:border-color 0.3s, box-shadow 0.3s;
+}
+.field select:focus, .field input:focus{
+  border-color:var(--blood-bright);
+  box-shadow:0 0 16px rgba(92,26,26,0.3);
+}
+.field select{cursor:pointer;}
+
+.generate-btn{
+  width:100%;
+  margin-top:12px;
+  padding:20px;
+  background:var(--blood);
+  border:1px solid var(--blood-bright);
+  color:var(--bone);
+  font-family:'Cinzel', serif;
+  font-weight:600;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  font-size:0.95rem;
+  cursor:pointer;
+  transition:background 0.3s, box-shadow 0.3s, transform 0.15s;
+  position:relative;
+}
+.generate-btn:hover{
+  background:var(--blood-bright);
+  box-shadow:0 0 40px rgba(138,36,36,0.5);
+}
+.generate-btn:active{transform:scale(0.99);}
+
+.result-box{
+  margin-top:36px;
+  padding:32px;
+  border-left:2px solid var(--blood-bright);
+  background:rgba(0,0,0,0.35);
+  font-family:'Special Elite', monospace;
+  line-height:1.9;
+  color:var(--bone);
+  min-height:80px;
+  white-space:pre-wrap;
+  display:none;
+  position:relative;
+}
+.result-box.visible{display:block;animation:fadeFlicker 0.6s steps(6);}
+@keyframes fadeFlicker{
+  0%{opacity:0;}
+  20%{opacity:0.6;}
+  35%{opacity:0.1;}
+  50%{opacity:0.8;}
+  100%{opacity:1;}
+}
+.result-box .typed-cursor{
+  display:inline-block;
+  width:9px;height:1.1em;
+  background:var(--blood-bright);
+  vertical-align:middle;
+  animation:cursorBlink 0.9s steps(2) infinite;
+}
+@keyframes cursorBlink{50%{opacity:0;}}
+
+/* ====== GALLERY / CARDS ====== */
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:2px;
+}
+@media(max-width:900px){.card-grid{grid-template-columns:1fr;}}
+
+.spook-card{
+  background:var(--void-2);
+  border:1px solid var(--static);
+  padding:36px 28px;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color 0.4s;
+}
+.spook-card:hover{border-color:var(--blood-bright);}
+.spook-card .noise-burst{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0;
+  mix-blend-mode:overlay;
+  transition:opacity 0.1s;
+  pointer-events:none;
+}
+.spook-card:hover .noise-burst{
+  animation:burstFlicker 0.4s steps(4);
+}
+@keyframes burstFlicker{
+  0%,100%{opacity:0;}
+  25%{opacity:0.5;}
+  50%{opacity:0.1;}
+  75%{opacity:0.4;}
+}
+.card-icon{
+  font-size:2rem;
+  margin-bottom:20px;
+  filter:drop-shadow(0 0 10px rgba(92,26,26,0.5));
+}
+.spook-card h3{
+  font-family:'Cinzel', serif;
+  font-size:1.25rem;
+  margin-bottom:12px;
+  color:var(--bone);
+}
+.spook-card p{
+  color:var(--bone-dim);
+  font-size:0.9rem;
+  line-height:1.7;
+}
+
+/* ====== ARCHIVE / EYE SIGNATURE SECTION ====== */
+.archive-section{
+  text-align:center;
+  padding:160px 48px;
+  position:relative;
+}
+.eye-container{
+  width:160px;height:160px;
+  margin:0 auto 48px;
+  position:relative;
+}
+.eye-svg{
+  width:100%;height:100%;
+  filter:drop-shadow(0 0 30px rgba(92,26,26,0.5));
+}
+.eye-iris{transform-origin:100px 100px;}
+.eye-pupil{transition:transform 0.15s ease-out;}
+
+/* ====== TICKER ====== */
+.ticker-wrap{
+  border-top:1px solid var(--static);
+  border-bottom:1px solid var(--static);
+  overflow:hidden;
+  padding:18px 0;
+  background:var(--void-2);
+}
+.ticker{
+  display:flex;
+  white-space:nowrap;
+  animation:tickerScroll 40s linear infinite;
+}
+.ticker span{
+  font-family:'Special Elite', monospace;
+  font-size:0.85rem;
+  letter-spacing:0.1em;
+  color:var(--bone-dim);
+  padding:0 32px;
+  border-right:1px solid var(--static);
+}
+@keyframes tickerScroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
+
+/* ====== FOOTER ====== */
+footer{
+  padding:80px 48px 60px;
+  text-align:center;
+  border-top:1px solid var(--static);
+  position:relative;
+}
+footer .foot-mark{
+  font-family:'Cinzel', serif;
+  color:var(--blood-bright);
+  letter-spacing:0.2em;
+  margin-bottom:16px;
+  font-size:1rem;
+}
+footer p{
+  color:var(--bone-dim);
+  font-size:0.78rem;
+  letter-spacing:0.08em;
+}
+
+/* ====== JUMPSCARE OVERLAY (subtle, controlled) ====== */
+.jump-flash{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:var(--void);
+  z-index:99999;
+  pointer-events:none;
+  opacity:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.jump-flash.active{
+  animation:jumpFlash 0.5s steps(3);
+}
+@keyframes jumpFlash{
+  0%{opacity:0;}
+  15%{opacity:1;background:#1a0505;}
+  30%{opacity:0.2;}
+  45%{opacity:0.9;background:#000;}
+  100%{opacity:0;}
+}
+.jump-flash .glyph{
+  font-size:8rem;
+  color:var(--blood-bright);
+  opacity:0;
+  font-family:'Cinzel',serif;
+}
+.jump-flash.active .glyph{
+  animation:glyphPulse 0.5s steps(3);
+}
+@keyframes glyphPulse{
+  0%,100%{opacity:0;transform:scale(1);}
+  30%{opacity:0.85;transform:scale(1.15);}
+}
+
+/* ====== CUSTOM CURSOR (subtle blood drip follow) ====== */
+.cursor-glow{
+  position:fixed;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(92,26,26,0.10), transparent 70%);
+  pointer-events:none;
+  z-index:1;
+  transform:translate(-50%,-50%);
+  transition:opacity 0.3s;
+}
+
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+}
+
+::selection{background:var(--blood);color:var(--bone);}
+
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
+  outline:2px solid var(--blood-bright);
+  outline-offset:2px;
+}
+</style>
+</head>
+<body>
+
+<div class="grain-overlay"></div>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+<div class="flicker-layer" id="flickerLayer"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<div class="jump-flash" id="jumpFlash"><div class="glyph">👁</div></div>
+
+<nav>
+  <div class="logo">HỒ SƠ <span>13</span></div>
+  <div class="nav-links">
+    <a href="#generator">Máy Tạo Ý Tưởng</a>
+    <a href="#archive">Thư Viện</a>
+    <a href="#about">Về Xưởng</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="case-number">TÀI LIỆU SỐ 0013 · ĐỘ MẬT: TỐI CAO</div>
+  <h1>
+    <span class="glitch-text" data-text="XƯỞNG">XƯỞNG</span><br>
+    <span class="glitch-text" data-text="KỊCH BẢN MA">KỊCH BẢN MA</span>
+  </h1>
+  <p class="hero-sub">
+    Nơi những ý tưởng phim và ảnh kinh dị được khai quật từ bóng tối.
+    Nhập vài chi tiết, để <span class="highlight">cỗ máy</span> dựng nên
+    kịch bản, bối cảnh và hình ảnh ám ảnh tiếp theo của bạn.
+  </p>
+  <div class="cta-row">
+    <button class="btn primary" onclick="document.getElementById('generator').scrollIntoView({behavior:'smooth'})">Bắt đầu tạo</button>
+    <button class="btn" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'})">Xem thư viện</button>
+  </div>
+  <div class="scroll-hint">
+    <span>CUỘN XUỐNG</span>
+    <div class="line"></div>
+  </div>
+</section>
+
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <span>TIẾNG GÕ CỬA LÚC 3 GIỜ SÁNG</span>
+    <span>NGÔI NHÀ KHÔNG CÓ GƯƠNG</span>
+    <span>NGƯỜI LẠ TRONG ẢNH CŨ</span>
+    <span>ÂM THANH DƯỚI SÀN NHÀ</span>
+    <span>BÓNG NGƯỜI KHÔNG CÓ CHỦ</span>
+    <span>CUỘC GỌI NHỠ TỪ SỐ ĐÃ MẤT</span>
+    <span>TIẾNG GÕ CỬA LÚC 3 GIỜ SÁNG</span>
+    <span>NGÔI NHÀ KHÔNG CÓ GƯƠNG</span>
+    <span>NGƯỜI LẠ TRONG ẢNH CŨ</span>
+    <span>ÂM THANH DƯỚI SÀN NHÀ</span>
+    <span>BÓNG NGƯỜI KHÔNG CÓ CHỦ</span>
+    <span>CUỘC GỌI NHỠ TỪ SỐ ĐÃ MẤT</span>
+  </div>
+</div>
+
+<section id="generator">
+  <div class="section-label">CÔNG CỤ 01</div>
+  <h2 class="section-title">Máy Tạo Ý Tưởng Kinh Dị</h2>
+  <p class="section-desc">
+    Chọn thể loại, bối cảnh và "con quái vật" của câu chuyện.
+    Cỗ máy sẽ ghép chúng lại thành một hạt giống ý tưởng — dùng để viết kịch bản,
+    dựng ảnh, hoặc lên storyboard.
+  </p>
+
+  <div class="tool-panel">
+    <div class="form-row">
+      <div class="field">
+        <label for="genre">Thể loại kinh dị</label>
+        <select id="genre">
+          <option>Found Footage (Cảnh ghi hình thực)</option>
+          <option>Kinh dị tâm lý</option>
+          <option>Ma nhà / Ám ảnh</option>
+          <option>Cổ tích dân gian rùng rợn</option>
+          <option>Kinh dị cơ thể (Body Horror)</option>
+          <option>Slasher / Sát nhân</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="setting">Bối cảnh</label>
+        <select id="setting">
+          <option>Căn nhà tập thể cũ bỏ hoang</option>
+          <option>Bệnh viện tâm thần đóng cửa</option>
+          <option>Làng chài hẻo lánh ven biển</option>
+          <option>Trường học nội trú giữa rừng</option>
+          <option>Chung cư mini lúc nửa đêm</option>
+          <option>Nghĩa địa cũ ở vùng cao</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="entity">Thực thể / Hiện tượng</label>
+        <select id="entity">
+          <option>Một bóng người không có mặt</option>
+          <option>Tiếng trẻ con hát trong tường</option>
+          <option>Hình ảnh bị lặp lại trong gương</option>
+          <option>Một lời nguyền truyền qua đồ vật</option>
+          <option>Người thân đã chết quay lại bất thường</option>
+          <option>Một đoạn băng ghi âm không nên tồn tại</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="mood">Tông màu cảm xúc</label>
+        <select id="mood">
+          <option>Căng thẳng âm ỉ, dồn nén</option>
+          <option>Ám ảnh, buồn bã, day dứt</option>
+          <option>Hoảng loạn, dồn dập</option>
+          <option>Kỳ bí, mơ hồ, không lời giải</option>
+        </select>
+      </div>
+    </div>
+    <button class="generate-btn" id="generateBtn">▣ Khai Quật Ý Tưởng</button>
+    <div class="result-box" id="resultBox"></div>
+  </div>
+</section>
+
+<section id="cards">
+  <div class="section-label">CÔNG CỤ 02</div>
+  <h2 class="section-title">Bộ Dụng Cụ Sáng Tạo</h2>
+  <p class="section-desc">Ba lối vào khác để khơi nguồn cảm hứng khi cỗ máy chưa đủ.</p>
+  <div class="card-grid">
+    <div class="spook-card" data-card="title">
+      <div class="noise-burst"></div>
+      <div class="card-icon">🩸</div>
+      <h3>Tạo Tên Phim</h3>
+      <p>Một cú click để nhận tên phim ngắn, ám ảnh, kiểu poster rạp cũ.</p>
+    </div>
+    <div class="spook-card" data-card="shot">
+      <div class="noise-burst"></div>
+      <div class="card-icon">🕯</div>
+      <h3>Gợi Ý Khung Hình</h3>
+      <p>Mô tả một cú máy quay hoặc bố cục ảnh rùng rợn để bạn dựng cảnh.</p>
+    </div>
+    <div class="spook-card" data-card="sound">
+      <div class="noise-burst"></div>
+      <div class="card-icon">📼</div>
+      <h3>Thiết Kế Âm Thanh</h3>
+      <p>Một lớp âm thanh nền gợi cảm giác bất an cho cảnh quay của bạn.</p>
+    </div>
+  </div>
+</section>
+
+<section id="archive" class="archive-section">
+  <div class="eye-container" id="eyeContainer">
+    <svg class="eye-svg" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#8a2424"/>
+          <stop offset="60%" stop-color="#3a0d0d"/>
+          <stop offset="100%" stop-color="#0a0a0c"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="100" rx="98" ry="55" fill="none" stroke="#3a3a3e" stroke-width="2"/>
+      <circle class="eye-iris" cx="100" cy="100" r="38" fill="url(#irisGrad)"/>
+      <circle class="eye-pupil" id="pupil" cx="100" cy="100" r="14" fill="#000"/>
+      <circle cx="92" cy="92" r="4" fill="rgba(255,255,255,0.4)"/>
+    </svg>
+  </div>
+  <div class="section-label" style="justify-content:center;">THƯ VIỆN BÓNG TỐI</div>
+  <h2 class="section-title">Mỗi Ý Tưởng Đều Đang Theo Dõi Bạn</h2>
+  <p class="section-desc" style="margin:0 auto;">
+    Lưu lại những hạt giống ý tưởng bạn thích nhất ở công cụ phía trên.
+    Con mắt sẽ luôn dõi theo con trỏ của bạn — như một lời nhắc rằng
+    câu chuyện hay nhất luôn đang quan sát người kể nó.
+  </p>
+</section>
+
+<footer>
+  <div class="foot-mark">✦ HỒ SƠ 13 ✦</div>
+  <p>XƯỞNG KỊCH BẢN MA — CÔNG CỤ SÁNG TẠO NỘI DUNG KINH DỊ. DÙNG CHO MỤC ĐÍCH SÁNG TÁC NGHỆ THUẬT.</p>
+</footer>
+
+<script>
+/* ====================== DATA POOLS ====================== */
+const titlePrefixes = ["Tiếng Vọng Của","Lời Nguyền","Ngôi Nhà","Đêm Cuối Của","Bóng Ma","Căn Phòng","Hơi Thở","Vết Sẹo Của","Giấc Mơ Của","Ký Ức Của"];
+const titleSuffixes = ["Kẻ Bị Lãng Quên","Mẹ","Người Câm Lặng","Tầng Hầm","Đứa Trẻ Mất Tích","Người Gác Cổng","Linh Hồn Lạc","Ngôi Làng","Đêm Trăng Tròn","Người Không Mặt"];
+
+const shotIdeas = [
+  "Cú máy quay cố định, dài bất thường, hướng vào một hành lang tối — không có gì xảy ra trong 8 giây đầu, rồi một bóng người lướt qua ở rìa khung hình.",
+  "Cận cảnh khuôn mặt nhân vật đang ngủ, ánh sáng nến lập lờ; phía sau, trong gương, một bóng đen đứng yên không nhấp nháy.",
+  "Góc máy thấp từ dưới sàn nhà nhìn lên, như thể có ai đang nằm dưới đó nhìn lên trần — ánh đèn flicker theo nhịp thở.",
+  "Toàn cảnh một ngôi nhà từ xa giữa cánh đồng sương mù, một ô cửa sổ duy nhất sáng đèn dù nhà được cho là bỏ hoang.",
+  "Máy quay tay run rẩy, lia nhanh qua một căn phòng trống, dừng lại đột ngột tại một góc tường có vết tay đỏ.",
+  "Cảnh quay qua khe cửa hẹp, một mắt người (hoặc thứ gì đó giống mắt người) nhìn chằm chằm từ phía bên kia.",
+];
+
+const soundIdeas = [
+  "Tiếng ù trầm liên tục ở dải 40Hz, xen tiếng lạch cạch kim loại ngẫu nhiên không theo nhịp — gây cảm giác có ai đang ở gần.",
+  "Tiếng thở dài bị kéo ngược (reverse breath), lồng dưới tiếng đồng hồ treo tường chạy chậm dần rồi dừng hẳn.",
+  "Tiếng trẻ con cười vọng lại từ xa, bị bóp méo nhẹ bằng hiệu ứng pitch-shift xuống, không rõ hướng phát ra.",
+  "Tiếng cọt két của sàn gỗ lặp lại đúng 3 nhịp, im lặng tuyệt đối, rồi lặp lại — không bao giờ thêm bước thứ 4.",
+  "Một đoạn nhạc hộp (music box) bị tam tấu lỗi, vài nốt bị kéo dài bất thường như băng bị kẹt.",
+  "Tiếng thì thầm nhiều giọng chồng lên nhau, không nghe rõ từ nào, âm lượng tăng dần khi nhân vật bước vào phòng.",
+];
+
+const ideaTemplates = (genre, setting, entity, mood) => {
+  const openLines = [
+    `Trong thể loại ${genre.toLowerCase()}, câu chuyện mở ra tại ${setting.toLowerCase()}.`,
+    `Lấy bối cảnh ${setting.toLowerCase()}, đây là một câu chuyện ${genre.toLowerCase()}.`,
+  ];
+  const middleLines = [
+    `Nhân vật chính dần phát hiện ra ${entity.toLowerCase()} — thứ không thể giải thích bằng logic thông thường.`,
+    `Mọi thứ bắt đầu khi họ nhận ra ${entity.toLowerCase()}, và không ai khác tin lời họ.`,
+  ];
+  const toneLines = [
+    `Không khí xuyên suốt mang màu sắc ${mood.toLowerCase()}, đẩy nhân vật đến giới hạn của lý trí.`,
+    `Tông truyện ${mood.toLowerCase()} được giữ đều, không cần jump-scare để gây ám ảnh.`,
+  ];
+  const endLines = [
+    `Cao trào không nằm ở việc "con ma" là gì — mà ở việc nhân vật phải đánh đổi điều gì để sống sót qua một đêm.`,
+    `Twist cuối gợi ý rằng thực thể ấy không hề mới xuất hiện — nó đã ở đó từ trước khi câu chuyện bắt đầu.`,
+  ];
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  return [pick(openLines), pick(middleLines), pick(toneLines), pick(endLines)].join(" ");
+};
+
+/* ====================== TYPEWRITER EFFECT ====================== */
+function typeWriter(el, text, speed=18){
+  el.innerHTML = "";
+  el.classList.add("visible");
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.className = "typed-cursor";
+  function step(){
+    if(i < text.length){
+      el.textContent = text.slice(0, i+1);
+      el.appendChild(cursor);
+      i++;
+      setTimeout(step, speed + Math.random()*20);
+    } else {
+      el.appendChild(cursor);
+    }
+  }
+  step();
+}
+
+/* ====================== GENERATE BUTTON ====================== */
+const generateBtn = document.getElementById("generateBtn");
+const resultBox = document.getElementById("resultBox");
+
+generateBtn.addEventListener("click", () => {
+  const genre = document.getElementById("genre").value;
+  const setting = document.getElementById("setting").value;
+  const entity = document.getElementById("entity").value;
+  const mood = document.getElementById("mood").value;
+
+  triggerFlicker();
+  const idea = ideaTemplates(genre, setting, entity, mood);
+  setTimeout(() => typeWriter(resultBox, idea, 14), 180);
+});
+
+/* ====================== CARD INTERACTIONS ====================== */
+document.querySelectorAll(".spook-card").forEach(card => {
+  card.addEventListener("click", () => {
+    const type = card.dataset.card;
+    let text = "";
+    if(type === "title"){
+      const a = titlePrefixes[Math.floor(Math.random()*titlePrefixes.length)];
+      const b = titleSuffixes[Math.floor(Math.random()*titleSuffixes.length)];
+      text = `${a} ${b}`;
+    } else if(type === "shot"){
+      text = shotIdeas[Math.floor(Math.random()*shotIdeas.length)];
+    } else if(type === "sound"){
+      text = soundIdeas[Math.floor(Math.random()*soundIdeas.length)];
+    }
+    document.getElementById("generator").scrollIntoView({behavior:"smooth", block:"center"});
+    triggerFlicker();
+    setTimeout(() => typeWriter(resultBox, text, 14), 250);
+  });
+});
+
+/* ====================== GLITCH TITLE LOOP ====================== */
+document.querySelectorAll(".glitch-text").forEach(el => {
+  function randomGlitch(){
+    el.classList.add("glitching");
+    setTimeout(()=> el.classList.remove("glitching"), 250);
+    setTimeout(randomGlitch, 2500 + Math.random()*4000);
+  }
+  setTimeout(randomGlitch, 800 + Math.random()*2000);
+});
+
+/* ====================== AMBIENT LIGHT FLICKER ====================== */
+const flickerLayer = document.getElementById("flickerLayer");
+function ambientFlicker(){
+  const intensity = Math.random();
+  if(intensity > 0.93){
+    flickerLayer.style.opacity = (0.15 + Math.random()*0.25).toFixed(2);
+    setTimeout(()=> flickerLayer.style.opacity = 0, 60 + Math.random()*80);
+  }
+  setTimeout(ambientFlicker, 400 + Math.random()*1800);
+}
+ambientFlicker();
+
+/* ====================== JUMPSCARE (subtle, rare, skippable) ====================== */
+const jumpFlash = document.getElementById("jumpFlash");
+function triggerFlicker(){
+  jumpFlash.classList.add("active");
+  setTimeout(()=> jumpFlash.classList.remove("active"), 500);
+}
+
+/* ====================== EYE FOLLOWS CURSOR ====================== */
+const pupil = document.getElementById("pupil");
+const eyeContainer = document.getElementById("eyeContainer");
+let eyeCenter = {x:0,y:0};
+function updateEyeCenter(){
+  const rect = eyeContainer.getBoundingClientRect();
+  eyeCenter = {x: rect.left + rect.width/2, y: rect.top + rect.height/2};
+}
+window.addEventListener("resize", updateEyeCenter);
+window.addEventListener("scroll", updateEyeCenter);
+updateEyeCenter();
+
+window.addEventListener("mousemove", (e) => {
+  const dx = e.clientX - eyeCenter.x;
+  const dy = e.clientY - eyeCenter.y;
+  const angle = Math.atan2(dy, dx);
+  const maxDist = 12;
+  const dist = Math.min(maxDist, Math.hypot(dx,dy)/14);
+  const px = Math.cos(angle) * dist;
+  const py = Math.sin(angle) * dist * 0.6;
+  pupil.setAttribute("cx", 100 + px);
+  pupil.setAttribute("cy", 100 + py);
+
+  // cursor glow follow
+  cursorGlow.style.left = e.clientX + "px";
+  cursorGlow.style.top = e.clientY + "px";
+});
+
+/* ====================== CURSOR GLOW ====================== */
+const cursorGlow = document.getElementById("cursorGlow");
+
+/* ====================== SCROLL REVEAL ====================== */
+const revealEls = document.querySelectorAll("section, .spook-card");
+revealEls.forEach(el => {
+  el.style.opacity = 0;
+  el.style.transform = "translateY(24px)";
+  el.style.transition = "opacity 0.9s ease, transform 0.9s ease";
+});
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.style.opacity = 1;
+      entry.target.style.transform = "translateY(0)";
+    }
+  });
+}, {threshold:0.12});
+revealEls.forEach(el => observer.observe(el));
+
+/* ====================== RANDOM RARE STATIC BURST ON BODY ====================== */
+let lastBurst = Date.now();
+function maybeStaticBurst(){
+  const now = Date.now();
+  if(now - lastBurst > 15000 && Math.random() > 0.985){
+    lastBurst = now;
+    document.body.style.filter = "invert(1) hue-rotate(180deg)";
+    setTimeout(()=> document.body.style.filter = "none", 70);
+  }
+  requestAnimationFrame(maybeStaticBurst);
+}
+requestAnimationFrame(maybeStaticBurst);
+</script>
+</body>
+</html>
