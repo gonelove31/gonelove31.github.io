@@ -569,6 +569,24 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 }
 .warn-banner span{color:var(--blood-bright);}
 .warn-banner.hidden{opacity:0;pointer-events:none;}
+
+.sound-toggle{
+  position:fixed;bottom:20px;left:20px;z-index:9994;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(10,10,12,0.9);border:1px solid var(--ash);
+  padding:12px 18px;border-radius:30px;
+  font-family:'Special Elite',monospace;font-size:0.75rem;
+  color:var(--bone-dim);letter-spacing:0.05em;
+  cursor:pointer;transition:border-color 0.3s, box-shadow 0.3s, color 0.3s;
+}
+.sound-toggle:hover{border-color:var(--blood-bright);color:var(--bone);}
+.sound-toggle.playing{
+  border-color:var(--blood-bright);
+  box-shadow:0 0 18px rgba(138,36,36,0.4);
+  color:var(--bone);
+}
+.sound-toggle .sound-icon{font-size:1rem;}
+@media(max-width:680px){.sound-toggle .sound-label{display:none;} .sound-toggle{padding:12px;}}
 </style>
 </head>
 <body>
@@ -901,10 +919,226 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 </footer>
 
 <div class="warn-banner" id="warnBanner">
-  ⚠ Trang có <span>hiệu ứng chớp sáng &amp; jump-scare nhẹ</span>. Bấm để ẩn cảnh báo này.
+  ⚠ Trang có <span>âm thanh, hiệu ứng chớp sáng &amp; jump-scare</span>. Bấm để ẩn cảnh báo này.
 </div>
 
+<button class="sound-toggle" id="soundToggle">
+  <span class="sound-icon">🔇</span>
+  <span class="sound-label">Bật âm thanh</span>
+</button>
+
 <script>
+/* ====================== AUDIO SYSTEM (Web Audio API, no files needed) ====================== */
+let audioCtx = null;
+let masterGain = null;
+let rainNoiseNode = null;
+let rainGain = null;
+let soundEnabled = false;
+
+function ensureAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.8;
+    masterGain.connect(audioCtx.destination);
+  }
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+}
+
+/* ---- Build a buffer of white noise, reused for rain/thunder/scream ---- */
+function createNoiseBuffer(duration){
+  const bufferSize = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){
+    data[i] = Math.random()*2 - 1;
+  }
+  return buffer;
+}
+
+/* ---- Continuous rain bed: filtered noise loop + random drip clicks ---- */
+function startRain(){
+  if(rainNoiseNode) return;
+  const noiseBuffer = createNoiseBuffer(4);
+  rainNoiseNode = audioCtx.createBufferSource();
+  rainNoiseNode.buffer = noiseBuffer;
+  rainNoiseNode.loop = true;
+
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = "bandpass";
+  bandpass.frequency.value = 3200;
+  bandpass.Q.value = 0.5;
+
+  const highshelf = audioCtx.createBiquadFilter();
+  highshelf.type = "highshelf";
+  highshelf.frequency.value = 5000;
+  highshelf.gain.value = 6;
+
+  rainGain = audioCtx.createGain();
+  rainGain.gain.value = 0;
+
+  rainNoiseNode.connect(bandpass);
+  bandpass.connect(highshelf);
+  highshelf.connect(rainGain);
+  rainGain.connect(masterGain);
+  rainNoiseNode.start();
+
+  // fade in
+  rainGain.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime + 1.5);
+
+  scheduleRainDrips();
+}
+
+function scheduleRainDrips(){
+  if(!soundEnabled) return;
+  const delay = 80 + Math.random()*180;
+  setTimeout(()=>{
+    if(soundEnabled && audioCtx){
+      playDrip();
+      scheduleRainDrips();
+    }
+  }, delay);
+}
+
+function playDrip(){
+  const buf = createNoiseBuffer(0.05);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "highpass";
+  bp.frequency.value = 4000 + Math.random()*3000;
+  const g = audioCtx.createGain();
+  g.gain.value = 0.012 + Math.random()*0.02;
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+  src.connect(bp);
+  bp.connect(g);
+  g.connect(masterGain);
+  src.start();
+  src.stop(audioCtx.currentTime + 0.1);
+}
+
+function stopRain(){
+  if(rainNoiseNode){
+    rainGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+    const node = rainNoiseNode;
+    setTimeout(()=>{ try{ node.stop(); }catch(e){} }, 500);
+    rainNoiseNode = null;
+  }
+}
+
+/* ---- Thunder: deep rumbling noise burst with a sharp crack ---- */
+function playThunder(){
+  if(!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // sharp crack
+  const crackBuf = createNoiseBuffer(0.3);
+  const crackSrc = audioCtx.createBufferSource();
+  crackSrc.buffer = crackBuf;
+  const crackFilter = audioCtx.createBiquadFilter();
+  crackFilter.type = "highpass";
+  crackFilter.frequency.value = 800;
+  const crackGain = audioCtx.createGain();
+  crackGain.gain.setValueAtTime(0.35, now);
+  crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  crackSrc.connect(crackFilter);
+  crackFilter.connect(crackGain);
+  crackGain.connect(masterGain);
+  crackSrc.start(now);
+  crackSrc.stop(now + 0.3);
+
+  // deep rumble
+  const rumbleBuf = createNoiseBuffer(2.5);
+  const rumbleSrc = audioCtx.createBufferSource();
+  rumbleSrc.buffer = rumbleBuf;
+  const rumbleFilter = audioCtx.createBiquadFilter();
+  rumbleFilter.type = "lowpass";
+  rumbleFilter.frequency.value = 120;
+  const rumbleGain = audioCtx.createGain();
+  rumbleGain.gain.setValueAtTime(0.0001, now);
+  rumbleGain.gain.linearRampToValueAtTime(0.45, now + 0.15);
+  rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 2.3);
+  rumbleSrc.connect(rumbleFilter);
+  rumbleFilter.connect(rumbleGain);
+  rumbleGain.connect(masterGain);
+  rumbleSrc.start(now);
+  rumbleSrc.stop(now + 2.5);
+}
+
+/* ---- Jumpscare scream: a sudden harsh, rising-then-cutting shriek ---- */
+function playJumpscareSound(){
+  if(!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // low impact thud
+  const thudOsc = audioCtx.createOscillator();
+  thudOsc.type = "sine";
+  thudOsc.frequency.setValueAtTime(120, now);
+  thudOsc.frequency.exponentialRampToValueAtTime(35, now + 0.3);
+  const thudGain = audioCtx.createGain();
+  thudGain.gain.setValueAtTime(0.6, now);
+  thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  thudOsc.connect(thudGain);
+  thudGain.connect(masterGain);
+  thudOsc.start(now);
+  thudOsc.stop(now + 0.4);
+
+  // harsh shrieking noise sweep
+  const shriekBuf = createNoiseBuffer(0.6);
+  const shriekSrc = audioCtx.createBufferSource();
+  shriekSrc.buffer = shriekBuf;
+  const shriekFilter = audioCtx.createBiquadFilter();
+  shriekFilter.type = "bandpass";
+  shriekFilter.Q.value = 6;
+  shriekFilter.frequency.setValueAtTime(900, now);
+  shriekFilter.frequency.exponentialRampToValueAtTime(2800, now + 0.18);
+  shriekFilter.frequency.exponentialRampToValueAtTime(600, now + 0.5);
+  const shriekGain = audioCtx.createGain();
+  shriekGain.gain.setValueAtTime(0.0001, now);
+  shriekGain.gain.linearRampToValueAtTime(0.55, now + 0.05);
+  shriekGain.gain.linearRampToValueAtTime(0.4, now + 0.25);
+  shriekGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+  shriekSrc.connect(shriekFilter);
+  shriekFilter.connect(shriekGain);
+  shriekGain.connect(masterGain);
+  shriekSrc.start(now);
+  shriekSrc.stop(now + 0.6);
+
+  // dissonant rising tone for extra unease
+  const toneOsc = audioCtx.createOscillator();
+  toneOsc.type = "sawtooth";
+  toneOsc.frequency.setValueAtTime(180, now);
+  toneOsc.frequency.exponentialRampToValueAtTime(620, now + 0.22);
+  const toneGain = audioCtx.createGain();
+  toneGain.gain.setValueAtTime(0.0001, now);
+  toneGain.gain.linearRampToValueAtTime(0.18, now + 0.04);
+  toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  toneOsc.connect(toneGain);
+  toneGain.connect(masterGain);
+  toneOsc.start(now);
+  toneOsc.stop(now + 0.45);
+}
+
+/* ---- Sound toggle button ---- */
+const soundToggle = document.getElementById("soundToggle");
+soundToggle.addEventListener("click", () => {
+  ensureAudioCtx();
+  soundEnabled = !soundEnabled;
+  if(soundEnabled){
+    startRain();
+    soundToggle.classList.add("playing");
+    soundToggle.querySelector(".sound-icon").textContent = "🔊";
+    soundToggle.querySelector(".sound-label").textContent = "Tắt âm thanh";
+  } else {
+    stopRain();
+    soundToggle.classList.remove("playing");
+    soundToggle.querySelector(".sound-icon").textContent = "🔇";
+    soundToggle.querySelector(".sound-label").textContent = "Bật âm thanh";
+  }
+});
+
 /* ====================== STICKY NAV ON SCROLL ====================== */
 const mainNav = document.querySelector("nav");
 function updateNavState(){
@@ -1031,6 +1265,9 @@ function strikeLightning(){
     setTimeout(()=> document.body.style.transform = "translate(-1px,1px)", 60);
     setTimeout(()=> document.body.style.transform = "translate(0,0)", 120);
   }, t*0.3);
+  // thunder sound, slightly delayed like real light-then-sound
+  const thunderDelay = 150 + Math.random()*400;
+  setTimeout(()=> playThunder(), thunderDelay);
 }
 scheduleLightning();
 
@@ -1209,6 +1446,7 @@ function triggerJumpscare(){
   jumpscareImg.src = pickGhostImage();
   jumpOverlay.classList.add("active");
   staticFlash.classList.add("active", "long");
+  playJumpscareSound();
   setTimeout(()=>{
     jumpOverlay.classList.remove("active");
     staticFlash.classList.remove("active", "long");
