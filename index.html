@@ -110,9 +110,18 @@ body{
 nav{
   position:fixed;top:0;left:0;width:100%;
   display:flex;justify-content:space-between;align-items:center;
-  padding:24px 48px;
-  z-index:500;
-  background:linear-gradient(to bottom, rgba(10,10,12,0.95), transparent);
+  padding:20px 48px;
+  z-index:9995;
+  background:linear-gradient(to bottom, rgba(8,8,10,0.92), rgba(8,8,10,0.55) 70%, transparent);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid transparent;
+  transition:background 0.35s ease, border-color 0.35s ease, padding 0.35s ease, box-shadow 0.35s ease;
+}
+nav.scrolled{
+  padding:14px 48px;
+  background:rgba(8,8,10,0.88);
+  border-bottom:1px solid var(--static);
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
 }
 .logo{
   font-family:'Cinzel',serif;
@@ -138,7 +147,49 @@ nav{
   color:var(--blood-bright);
   text-shadow:0 0 8px var(--blood-bright);
 }
-@media(max-width:980px){.nav-links{display:none;}}
+.nav-burger{
+  display:none;
+  flex-direction:column;
+  gap:5px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:8px;
+  z-index:9996;
+}
+.nav-burger span{
+  width:24px;height:2px;background:var(--bone);
+  transition:transform 0.3s, opacity 0.3s;
+}
+.nav-burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.nav-burger.open span:nth-child(2){opacity:0;}
+.nav-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+@media(max-width:980px){
+  .nav-links{
+    display:flex;
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100vh;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:32px;
+    background:rgba(8,8,10,0.97);
+    backdrop-filter:blur(10px);
+    transform:translateY(-100%);
+    opacity:0;
+    transition:transform 0.4s ease, opacity 0.4s ease;
+    pointer-events:none;
+  }
+  .nav-links.open{
+    transform:translateY(0);
+    opacity:1;
+    pointer-events:auto;
+  }
+  .nav-links a{font-size:1.1rem;letter-spacing:0.15em;}
+  .nav-burger{display:flex;}
+}
 
 /* ====== HERO ====== */
 .hero{
@@ -538,7 +589,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 
 <nav>
   <div class="logo">HỒ SƠ <span>13</span></div>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="#generator">Máy Tạo Ý Tưởng</a>
     <a href="#process">Quy Trình</a>
     <a href="#gallery">Bóng Ma</a>
@@ -547,6 +598,9 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     <a href="#faq">Hỏi Đáp</a>
     <a href="#archive">Lưu Trữ</a>
   </div>
+  <button class="nav-burger" id="navBurger" aria-label="Mở menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <!-- ============ HERO ============ -->
@@ -851,6 +905,32 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 </div>
 
 <script>
+/* ====================== STICKY NAV ON SCROLL ====================== */
+const mainNav = document.querySelector("nav");
+function updateNavState(){
+  if(window.scrollY > 40){
+    mainNav.classList.add("scrolled");
+  } else {
+    mainNav.classList.remove("scrolled");
+  }
+}
+window.addEventListener("scroll", updateNavState, {passive:true});
+updateNavState();
+
+/* ====================== MOBILE NAV TOGGLE ====================== */
+const navBurger = document.getElementById("navBurger");
+const navLinks = document.getElementById("navLinks");
+navBurger.addEventListener("click", () => {
+  navBurger.classList.toggle("open");
+  navLinks.classList.toggle("open");
+});
+navLinks.querySelectorAll("a").forEach(link => {
+  link.addEventListener("click", () => {
+    navBurger.classList.remove("open");
+    navLinks.classList.remove("open");
+  });
+});
+
 /* ====================== WARNING BANNER ====================== */
 document.getElementById("warnBanner").addEventListener("click", function(){
   this.classList.add("hidden");
